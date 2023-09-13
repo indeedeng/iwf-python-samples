@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "iwf-python-samples"
+version = "0.1.0"
+description = "iWF Python Samples"
+authors = ["Quanzheng Long <qlong@indeed.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "workflows"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+iwf-python-sdk = "^0.1.0"
+Flask = "^2.3.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+mypy = "^1.5.1"
+pytest-cov = "^4.1.0"
+pytest-env = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
