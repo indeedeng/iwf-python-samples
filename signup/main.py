@@ -10,15 +10,42 @@ from iwf.worker_service import (
     WorkerService,
 )
 
-from workflows.iwf_config import client, worker_service
-from workflows.signup_workflow import BasicWorkflow
+from signup.iwf_config import client, worker_service
+from signup.signup_workflow import UserSignupWorkflow, Form
 
 flask_app = Flask(__name__)
 
 
+@flask_app.route("/signup/submit")
+def signup_submit():
+    username = request.args["username"]
+    email = request.args["email"]
+    form = Form(
+        username,
+        email,
+        request.args.get("firstname", "TestDefaultFirstName"),
+        request.args.get("lastname", "TestDefaultLastName"),
+    )
+    client.start_workflow(UserSignupWorkflow, username, 3600, form)
+    return "workflow started"
+
+
+@flask_app.route("/signup/verify")
+def signup_verify():
+    username = request.args["username"]
+    source = request.args["source"]
+    return client.invoke_rpc(username, UserSignupWorkflow.verify, source)
+
+
+@flask_app.route("/signup/describe")
+def signup_describe():
+    username = request.args["username"]
+    return client.invoke_rpc(username, UserSignupWorkflow.describe)
+
+
 @flask_app.route("/")
 def index():
-    return "iwf workflow worker home"
+    return "iwf workflow home"
 
 
 @flask_app.route(WorkerService.api_path_workflow_state_wait_until, methods=["POST"])
@@ -50,12 +77,6 @@ def internal_error(exception):
     response.content_type = "application/json"
     response.status_code = 500
     return response
-
-
-@flask_app.route("/test")
-def endpoint():
-    client.start_workflow(BasicWorkflow, "test", 10, 100)
-    return "hello"
 
 
 def main():

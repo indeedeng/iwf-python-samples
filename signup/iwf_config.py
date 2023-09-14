@@ -4,10 +4,10 @@ from iwf.worker_service import (
     WorkerService,
 )
 
-from workflows.signup_workflow import BasicWorkflow
+from signup.signup_workflow import UserSignupWorkflow
 
 registry = Registry()
 worker_service = WorkerService(registry)
 client = Client(registry)
 
-registry.add_workflow(BasicWorkflow())
+registry.add_workflow(UserSignupWorkflow())
