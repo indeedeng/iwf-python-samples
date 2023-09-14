@@ -2,7 +2,12 @@
 
 samples for iWF Python SDK
 
-## user sign-up workflow
+## Running Requirements
+
+* Python 3.9+
+* [iWF server](https://github.com/indeedeng/iwf#how-to-use)
+
+## User sign-up workflow
 
 A common use case that is almost everywhere -- new user sign-up/register a new account in a website/system.
 E.g. Amazon/Linkedin/Google/etc...

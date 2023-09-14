@@ -16,6 +16,7 @@ from signup.signup_workflow import UserSignupWorkflow, Form
 flask_app = Flask(__name__)
 
 
+# http://localhost:8802/signup/submit?username=test1&email=abc@c.com
 @flask_app.route("/signup/submit")
 def signup_submit():
     username = request.args["username"]
@@ -30,6 +31,7 @@ def signup_submit():
     return "workflow started"
 
 
+# http://localhost:8802/signup/verify?username=test1&source=email
 @flask_app.route("/signup/verify")
 def signup_verify():
     username = request.args["username"]
@@ -37,6 +39,7 @@ def signup_verify():
     return client.invoke_rpc(username, UserSignupWorkflow.verify, source)
 
 
+# http://localhost:8802/signup/describe?username=test1
 @flask_app.route("/signup/describe")
 def signup_describe():
     username = request.args["username"]
