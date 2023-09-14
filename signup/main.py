@@ -48,6 +48,9 @@ def index():
     return "iwf workflow home"
 
 
+# below are iWF workflow worker APIs to be called by iWF server
+
+
 @flask_app.route(WorkerService.api_path_workflow_state_wait_until, methods=["POST"])
 def handle_wait_until():
     req = WorkflowStateWaitUntilRequest.from_dict(request.json)
@@ -71,12 +74,7 @@ def handle_rpc():
 
 @flask_app.errorhandler(Exception)
 def internal_error(exception):
-    response = exception.get_response()
-    # replace the body with JSON
-    response.data = traceback.format_exc()
-    response.content_type = "application/json"
-    response.status_code = 500
-    return response
+    return traceback.format_exc(), 500
 
 
 def main():

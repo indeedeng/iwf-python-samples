@@ -4,6 +4,7 @@ from datetime import timedelta
 from iwf.command_request import CommandRequest, InternalChannelCommand, TimerCommand
 from iwf.command_results import CommandResults
 from iwf.communication import Communication
+from iwf.communication_schema import CommunicationSchema, CommunicationMethod
 from iwf.iwf_api.models import ChannelRequestStatus
 from iwf.persistence import Persistence
 from iwf.persistence_schema import PersistenceField, PersistenceSchema
@@ -73,7 +74,6 @@ class VerifyState(WorkflowState[None]):
             == ChannelRequestStatus.RECEIVED
         ):
             print(f"API to send welcome email to {form.email}")
-            print("write to DB")
             return StateDecision.graceful_complete_workflow("done")
         else:
             print(f"API to send the a reminder email to {form.email}")
@@ -81,6 +81,9 @@ class VerifyState(WorkflowState[None]):
 
 
 class UserSignupWorkflow(ObjectWorkflow):
+    def get_workflow_states(self) -> StateSchema:
+        return StateSchema.with_starting_state(SubmitState(), VerifyState())
+
     def get_persistence_schema(self) -> PersistenceSchema:
         return PersistenceSchema.create(
             PersistenceField.data_attribute_def(data_attribute_form, Form),
@@ -88,8 +91,10 @@ class UserSignupWorkflow(ObjectWorkflow):
             PersistenceField.data_attribute_def(data_attribute_verified_source, str),
         )
 
-    def get_workflow_states(self) -> StateSchema:
-        return StateSchema.with_starting_state(SubmitState(), VerifyState())
+    def get_communication_schema(self) -> CommunicationSchema:
+        return CommunicationSchema.create(
+            CommunicationMethod.internal_channel_def(verify_channel, None)
+        )
 
     @rpc()
     def verify(
