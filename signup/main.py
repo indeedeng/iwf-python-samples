@@ -75,6 +75,8 @@ def handle_rpc():
     return resp.to_dict()
 
 
+# this handler is extremely useful for debugging iWF
+# the WebUI will be able to show you the error with stacktrace
 @flask_app.errorhandler(Exception)
 def internal_error(exception):
     return traceback.format_exc(), 500
