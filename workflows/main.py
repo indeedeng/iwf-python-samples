@@ -1,52 +1,49 @@
-from flask import Flask
-from iwf.registry import Registry
+import traceback
 
-# from iwf.iwf_api.iwf_api.models import (
-#     WorkflowStateExecuteRequest,
-#     WorkflowStateWaitUntilRequest,
-#     WorkflowWorkerRpcRequest,
-# )
-# from iwf.registry import Registry
-# from iwf.worker_service import (
-#     WorkerService,
-# )
+from flask import Flask, request
+from iwf.iwf_api.models import (
+    WorkflowStateExecuteRequest,
+    WorkflowStateWaitUntilRequest,
+    WorkflowWorkerRpcRequest,
+)
+from iwf.worker_service import (
+    WorkerService,
+)
 
-registry = Registry()
+from workflows.iwf_config import client, worker_service
+from workflows.signup_workflow import BasicWorkflow
 
-_flask_app = Flask(__name__)
-
-_worker_service = WorkerService(registry)
+flask_app = Flask(__name__)
 
 
-@_flask_app.route("/")
+@flask_app.route("/")
 def index():
-    return "hello"
+    return "iwf workflow worker home"
 
 
-@_flask_app.route(WorkerService.api_path_workflow_state_wait_until, methods=["POST"])
+@flask_app.route(WorkerService.api_path_workflow_state_wait_until, methods=["POST"])
 def handle_wait_until():
     req = WorkflowStateWaitUntilRequest.from_dict(request.json)
-    resp = _worker_service.handle_workflow_state_wait_until(req)
+    resp = worker_service.handle_workflow_state_wait_until(req)
     return resp.to_dict()
 
 
-@_flask_app.route(WorkerService.api_path_workflow_state_execute, methods=["POST"])
+@flask_app.route(WorkerService.api_path_workflow_state_execute, methods=["POST"])
 def handle_execute():
     req = WorkflowStateExecuteRequest.from_dict(request.json)
-    resp = _worker_service.handle_workflow_state_execute(req)
+    resp = worker_service.handle_workflow_state_execute(req)
     return resp.to_dict()
 
 
-@_flask_app.route(WorkerService.api_path_workflow_worker_rpc, methods=["POST"])
+@flask_app.route(WorkerService.api_path_workflow_worker_rpc, methods=["POST"])
 def handle_rpc():
     req = WorkflowWorkerRpcRequest.from_dict(request.json)
-    resp = _worker_service.handle_workflow_worker_rpc(req)
+    resp = worker_service.handle_workflow_worker_rpc(req)
     return resp.to_dict()
 
 
-@_flask_app.errorhandler(Exception)
+@flask_app.errorhandler(Exception)
 def internal_error(exception):
-    # TODO: how to print to std ??
     response = exception.get_response()
     # replace the body with JSON
     response.data = traceback.format_exc()
@@ -55,17 +52,14 @@ def internal_error(exception):
     return response
 
 
-app = Flask(__name__)
-
-
-@app.route("/")
-def index():
-    return "<p>Hello, World!</p>"
+@flask_app.route("/test")
+def endpoint():
+    client.start_workflow(BasicWorkflow, "test", 10, 100)
+    return "hello"
 
 
 def main():
-    print("Hello World!")
-    app.run()
+    flask_app.run(host="0.0.0.0", port=8802)
 
 
 if __name__ == "__main__":

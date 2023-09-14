@@ -183,13 +183,13 @@ files = [
 
 [[package]]
 name = "iwf-python-sdk"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "iwf_python_sdk-0.1.1-py3-none-any.whl", hash = "sha256:18f9ca79947ea24430ec609302059aa5b74104c19a4c6b7e79fd522171a3755d"},
-    {file = "iwf_python_sdk-0.1.1.tar.gz", hash = "sha256:94f76e0d052742e6c9af177ea4887ccbb67690072fd27c976b58c167584e407b"},
+    {file = "iwf_python_sdk-0.1.2-py3-none-any.whl", hash = "sha256:2a6eff5b5de4ada01529cc9d6bf8a0655e7e61de0d6c12d5a63ff4ca77f96a69"},
+    {file = "iwf_python_sdk-0.1.2.tar.gz", hash = "sha256:0a9186ac5d347fa69d8dcbccef3830a5be5380e58abc826636bd2e3999067618"},
 ]
 
 [package.dependencies]
