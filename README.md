@@ -1,6 +1,6 @@
 # iwf-python-samples
 
-samples for iWF Python SDK
+samples for [iWF Python SDK](https://github.com/indeedeng/iwf-python-sdk)
 
 ## Running Requirements
 
