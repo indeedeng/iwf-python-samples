@@ -48,7 +48,8 @@ class CreateDebitMemoState(WorkflowState[TransferRequest]):
             communication: Communication,
     ) -> StateDecision:
         print(f"API to create debit memo for account {request.from_account} for amount{request.amount} with notes{request.notes}")
-
+        # uncomment this to test error
+        # raise Exception("test error")
         return StateDecision.single_next_state(DebitState, request)
 
     def get_state_options(self) -> WorkflowStateOptions:
@@ -56,6 +57,8 @@ class CreateDebitMemoState(WorkflowState[TransferRequest]):
             execute_failure_handling_state=CompensateState,
             execute_api_retry_policy=RetryPolicy(
                 maximum_attempts_duration_seconds=3600,
+                # replace with this to try a shorter retry
+                # maximum_attempts_duration_seconds=3,
             )
         )
 
