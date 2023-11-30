@@ -7,7 +7,12 @@ samples for iWF Python SDK
 * Python 3.9+
 * [iWF server](https://github.com/indeedeng/iwf#how-to-use)
 
-## User sign-up workflow
+## Case1: [Money transfer workflow/SAGA Patten](./moneytransfer)
+
+This example shows how to transfer money from one account to another account.
+The transfer involves multiple steps. When any step fails, the whole transfer is canceled with some compensation steps.
+
+## Case 2: User sign-up workflow
 
 A common use case that is almost everywhere -- new user sign-up/register a new account in a website/system.
 E.g. Amazon/Linkedin/Google/etc...
@@ -47,7 +52,7 @@ WorkflowAsCode
 Natural to represent business
 Builtin & rich support for operation tooling
 
-It's so simple & easy to do that the [business logic code](./signup/signup_workflow.py) can be shown here!
+It's so simple & easy to do that the [business logic code like this](./signup/signup_workflow.py) can be shown here!
 
 ```python
 class SubmitState(WorkflowState[Form]):
