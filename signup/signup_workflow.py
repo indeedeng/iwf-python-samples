@@ -5,7 +5,7 @@ from iwf.command_request import CommandRequest, InternalChannelCommand, TimerCom
 from iwf.command_results import CommandResults
 from iwf.communication import Communication
 from iwf.communication_schema import CommunicationSchema, CommunicationMethod
-from iwf.iwf_api.models import ChannelRequestStatus
+from iwf.iwf_api.models import ChannelRequestStatus, PersistenceLoadingPolicy, PersistenceLoadingType
 from iwf.persistence import Persistence
 from iwf.persistence_schema import PersistenceField, PersistenceSchema
 from iwf.rpc import rpc
@@ -96,7 +96,12 @@ class UserSignupWorkflow(ObjectWorkflow):
             CommunicationMethod.internal_channel_def(verify_channel, None)
         )
 
-    @rpc()
+    @rpc(
+        data_attribute_loading_policy=PersistenceLoadingPolicy(
+            persistence_loading_type=PersistenceLoadingType.LOAD_PARTIAL_WITH_EXCLUSIVE_LOCK,
+            locking_keys=[data_attribute_form, data_attribute_status, data_attribute_verified_source],
+        )
+    )
     def verify(
         self, source: str, persistence: Persistence, communication: Communication
     ) -> str:
@@ -108,7 +113,12 @@ class UserSignupWorkflow(ObjectWorkflow):
         communication.publish_to_internal_channel(verify_channel)
         return "done"
 
-    @rpc()
+    @rpc(
+        data_attribute_loading_policy=PersistenceLoadingPolicy(
+            persistence_loading_type=PersistenceLoadingType.LOAD_PARTIAL_WITH_EXCLUSIVE_LOCK,
+            locking_keys=[data_attribute_form, data_attribute_status, data_attribute_verified_source],
+        )
+    )
     def describe(self, persistence: Persistence) -> tuple:
         form = persistence.get_data_attribute(data_attribute_form)
         status = persistence.get_data_attribute(data_attribute_status)
