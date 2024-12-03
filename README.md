@@ -7,6 +7,17 @@ samples for [iWF Python SDK](https://github.com/indeedeng/iwf-python-sdk)
 * Python 3.9+
 * [iWF server](https://github.com/indeedeng/iwf#how-to-use)
 
+## How to run locally
+1. Start iWF server, using [docker](https://github.com/indeedeng/iwf?tab=readme-ov-file#using-all-in-one-docker-image) or [docker-compose](https://github.com/indeedeng/iwf?tab=readme-ov-file#using-docker-image--docker-compose)
+2. Install dependencies and run the sample code
+```
+poetry install
+# Run case 1
+poetry run python moneytransfer/main.py
+# or, run case 2
+poetry run python signup/main.py
+```
+
 ## Case1: [Money transfer workflow/SAGA Patten](./moneytransfer)
 
 This example shows how to transfer money from one account to another account.
