@@ -13,15 +13,11 @@ from iwf.communication import Communication
 from iwf.workflow_context import WorkflowContext
 from iwf.rpc import rpc
 from iwf.errors import WorkflowAlreadyStartedError
-from iwf_config import client
 from iwf.workflow_options import WorkflowOptions
 from iwf.iwf_api.models import (
     IDReusePolicy,
     WorkflowAlreadyStartedOptions,
 )
-
-from processing_workflow import ProcessingWorkflow
-from processing_workflow import PARENT_WORKFLOW_ID
 
 @dataclass
 class Request:
@@ -59,7 +55,7 @@ class ControllerWorkflow(ObjectWorkflow):
         if communication.get_internal_channel_size(REQUEST_QUEUE)+1 > MAX_BUFFERED_REQUESTS:
             return False
         
-        communication.publish_internal_channel(REQUEST_QUEUE, request)
+        communication.publish_to_internal_channel(REQUEST_QUEUE, request)
         return True
 
     @rpc()
@@ -69,12 +65,12 @@ class ControllerWorkflow(ObjectWorkflow):
             # this could be caused by some edge cases when server is overloaded by some timeout/backoff retry
             # checking here to avoid sending too many garbage to the channel.
             return
-        communication.publish_internal_channel(CHILD_COMPLETE_CHANNEL_PREFIX + child_workflow_id, None)
+        communication.publish_to_internal_channel(CHILD_COMPLETE_CHANNEL_PREFIX + child_workflow_id, None)
 
 
 class InitState(WorkflowState[Request]):
     def execute(self, ctx: WorkflowContext, input: Request, command_results: CommandResults, persistence: Persistence, communication: Communication) -> StateDecision:
-        communication.publish_internal_channel(REQUEST_QUEUE, input)
+        communication.publish_to_internal_channel(REQUEST_QUEUE, input)
         
         persistence.set_data_attribute(DA_CURRENT_WAIT_CHILD_WFS, [])
         
@@ -104,6 +100,9 @@ class LoopForNextRequestState(WorkflowState[None]):
                     request = command_result.value
                     child_workflow_id = f"processing-{request.id}"
                     try:
+                        from iwf_config import client
+                        from processing_workflow import ProcessingWorkflow
+                        from processing_workflow import PARENT_WORKFLOW_ID
                         client.start_workflow(
                             ProcessingWorkflow, child_workflow_id, 3600, request,
                             WorkflowOptions(

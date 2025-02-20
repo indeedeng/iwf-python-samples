@@ -15,7 +15,6 @@ from iwf.workflow_context import WorkflowContext
 from iwf.rpc import rpc
 from controller_workflow import Request
 from controller_workflow import ControllerWorkflow
-from iwf_config import client
 from iwf.errors import WorkflowNotExistsError
 
 PARENT_WORKFLOW_ID = "ParentWorkflowId"
@@ -43,7 +42,7 @@ class FooState(WorkflowState[Request]):
         random_duration = randint(1, 30)
         # use a timer to simulate some long processing logic...
         return CommandRequest.for_any_command_completed(
-            TimerCommand.timer_command_by_duration(timedelta(seconds=random_duration))
+            TimerCommand.by_seconds(random_duration)
         )
 
     def execute(self, ctx: WorkflowContext, input: Request, command_results: CommandResults, persistence: Persistence, communication: Communication) -> StateDecision:
@@ -53,7 +52,8 @@ class FooState(WorkflowState[Request]):
 class CompleteState(WorkflowState[None]):
     def execute(self, ctx: WorkflowContext, input: None, command_results: CommandResults, persistence: Persistence, communication: Communication) -> StateDecision:
         parent_workflow_id = persistence.get_data_attribute(PARENT_WORKFLOW_ID)
-        
+
+        from iwf_config import client
         try:
             client.invoke_rpc(parent_workflow_id, ControllerWorkflow.complete_child_workflow)
         except WorkflowNotExistsError:
