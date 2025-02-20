@@ -32,10 +32,16 @@ def signup_submit():
     rand_suffix = randint(1, NUM_CONTROLLER_WORKFLOWS)
     controller_workflow_id = f"controller_workflow_{rand_suffix}" # replace by other mechanism to choose resource
     try:
-        client.invoke_rpc(controller_workflow_id, ControllerWorkflow.enqueue, req)
+        success = client.invoke_rpc(controller_workflow_id, ControllerWorkflow.enqueue, req)
     except WorkflowNotExistsError:
         client.start_workflow(ControllerWorkflow, controller_workflow_id, 0, req)
-    return "request is accepted"
+        success = True
+    if success:    
+        return "request is accepted"
+    else:
+        # alternatively, move this this route logic into a workflow state to have backoff retry
+        # so that the request is always accepted
+        return "request is denied, retry later"
 
 
 # http://localhost:8802/controller/processing/describe?id=123
