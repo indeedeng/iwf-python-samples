@@ -40,22 +40,24 @@ class ControllerWorkflow(ObjectWorkflow):
 
     def get_persistence_schema(self) -> PersistenceSchema:
         return PersistenceSchema.create(
-            PersistenceField.data_attribute_def(DA_CURRENT_WAIT_CHILD_WFS, List[str]), 
+            PersistenceField.data_attribute_def(DA_CURRENT_WAIT_CHILD_WFS, List),
         )
 
     def get_communication_schema(self) -> CommunicationSchema:
         return CommunicationSchema.create(
             CommunicationMethod.internal_channel_def(REQUEST_QUEUE, Request),
-            CommunicationMethod.internal_channel_def_by_prefix(CHILD_COMPLETE_CHANNEL_PREFIX, None),
+            CommunicationMethod.internal_channel_def_by_prefix(CHILD_COMPLETE_CHANNEL_PREFIX, type(None)),
         )
     
 
     @rpc()
-    def enqueue(self, request: Request, communication: Communication) -> bool:
+    def enqueue(self, ctx: WorkflowContext, input: dict, communication: Communication) -> bool:
         if communication.get_internal_channel_size(REQUEST_QUEUE)+1 > MAX_BUFFERED_REQUESTS:
             return False
-        
-        communication.publish_to_internal_channel(REQUEST_QUEUE, request)
+        # a bug in SDK: https://github.com/indeedeng/iwf-python-sdk/issues/75
+        # needs a workaround for now
+        req = Request(input["id"], input["data"])
+        communication.publish_to_internal_channel(REQUEST_QUEUE, req)
         return True
 
     @rpc()
@@ -90,8 +92,7 @@ class LoopForNextRequestState(WorkflowState[None]):
         return CommandRequest.for_any_command_completed(*commands)
 
     def execute(self, ctx: WorkflowContext, input: None, command_results: CommandResults, persistence: Persistence, communication: Communication) -> StateDecision:
-        current_wait_child_wfs = persistence.get_data_attribute(DA_CURRENT_WAIT_CHILD_WFS)
-        new_wait_list = []
+        new_wait_list = persistence.get_data_attribute(DA_CURRENT_WAIT_CHILD_WFS)
         
         for command_result in command_results.internal_channel_commands:
             channel_name = command_result.channel_name
@@ -129,5 +130,5 @@ class LoopForNextRequestState(WorkflowState[None]):
         
         if not new_wait_list:
             # atomically check if we can close this workflow 
-            return StateDecision.force_complete_if_internal_channel_empty_or_else(REQUEST_QUEUE, LoopForNextRequestState)
+            return StateDecision.force_complete_if_internal_channel_empty_or_else(REQUEST_QUEUE, "done", LoopForNextRequestState)
         return StateDecision.single_next_state(LoopForNextRequestState)

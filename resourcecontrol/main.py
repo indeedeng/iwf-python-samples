@@ -85,7 +85,8 @@ def handle_rpc():
 # the WebUI will be able to show you the error with stacktrace
 @flask_app.errorhandler(Exception)
 def internal_error(exception):
-    return worker_service.handle_worker_error(exception), 500
+    print(traceback.format_exc())
+    return traceback.format_exc(), 500
 
 
 def main():

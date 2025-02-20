@@ -55,7 +55,7 @@ class CompleteState(WorkflowState[None]):
 
         from iwf_config import client
         try:
-            client.invoke_rpc(parent_workflow_id, ControllerWorkflow.complete_child_workflow)
+            client.invoke_rpc(parent_workflow_id, ControllerWorkflow.complete_child_workflow, ctx.workflow_id)
         except WorkflowNotExistsError:
             print("Parent workflow may have completed, possibly a duplicate completion request, ignoring it.")
         
