@@ -10,7 +10,7 @@ packages = [{ include = "signup" }]
 [tool.poetry.dependencies]
 python = "^3.9"
 Flask = "^2.3.3"
-iwf-python-sdk = "^0.1.1"
+iwf-python-sdk = "^0.5.0"
 httpx = "^0.23.3"
 attrs = "^21.3.0"
 
