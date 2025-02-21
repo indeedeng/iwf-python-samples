@@ -10,12 +10,13 @@ from iwf.iwf_api.models import (
 from iwf.worker_service import (
     WorkerService,
 )
+from iwf.workflow_options import WorkflowOptions
 
 from iwf_config import client, worker_service
 from controller_workflow import (
     ControllerWorkflow,
-    NUM_CONTROLLER_WORKFLOWS,
-    Request
+    SPOT_INSTANCE_IDS,
+    Request, DA_INSTANCE_ID
 )
 from iwf.errors import WorkflowNotExistsError
 from processing_workflow import ProcessingWorkflow
@@ -25,28 +26,45 @@ flask_app = Flask(__name__)
 
 # http://localhost:8802/controller/request?id=123
 @flask_app.route("/controller/request")
-def signup_submit():
+def start_request():
     id = request.args["id"]
     req = Request(id=id, data="abcd")
 
-    rand_suffix = randint(1, NUM_CONTROLLER_WORKFLOWS)
-    controller_workflow_id = f"controller_workflow_{rand_suffix}" # replace by other mechanism to choose resource
+    # for extension, instead of randomly picking, we could sort the list based on usage, as you described in the advanced use case
+    rand_idx = randint(0, len(SPOT_INSTANCE_IDS)-1)
+    instance_id = SPOT_INSTANCE_IDS[rand_idx]
+
+    print(f"call some API here to check if the instance is available, if not then pick another one from the list")
+
+    controller_workflow_id = f"controller_workflow_{instance_id}"
     try:
         success = client.invoke_rpc(controller_workflow_id, ControllerWorkflow.enqueue, req)
     except WorkflowNotExistsError:
-        client.start_workflow(ControllerWorkflow, controller_workflow_id, 0, req)
+        client.start_workflow(ControllerWorkflow, controller_workflow_id, 0, req,
+                                  WorkflowOptions(
+                                      initial_data_attributes={DA_INSTANCE_ID: instance_id},
+                                  )
+                              )
         success = True
     if success:    
         return "request is accepted"
     else:
-        # alternatively, move this this route logic into a workflow state to have backoff retry
-        # so that the request is always accepted
-        return "request is denied, retry later"
+        # for extension, move this route logic into a RequestWorkflow, with single state to have backoff retry
+        # so that the request is always accepted instead of denying
+        return "request is denied because instance is busy. Please retry later"
 
+
+# http://localhost:8802/controller/shutdown?instance_id=permanentID1
+@flask_app.route("/controller/shutdown")
+def shutdown_instance():
+    instance_id = request.args["instance_id"]
+    controller_workflow_id = f"controller_workflow_{instance_id}"
+    client.invoke_rpc(controller_workflow_id, ControllerWorkflow.shutdown, None)
+    return "done"
 
 # http://localhost:8802/controller/processing/describe?id=123
 @flask_app.route("/controller/processing/describe")
-def signup_describe():
+def describe_request():
     id = request.args["id"]
     child_workflow_id = f"processing-{id}"
     return client.invoke_rpc(child_workflow_id, ProcessingWorkflow.describe)

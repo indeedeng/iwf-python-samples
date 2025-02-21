@@ -24,13 +24,23 @@ class Request:
     id: str
     data: str
 
-NUM_CONTROLLER_WORKFLOWS = 5 # max number of controller workflows, one per resource (e.g ec2 instance)
+# A list of unique IDs of the spot instances being used.
+# The ID will be used to check status of the instance and get more detailed info.
+# The IDs are permanent, meaning that they will not change during restarting or interrupts from AWS.
+# When scaling up, manually request a new instance in AWS console, then add its ID here.
+# When scaling down or need to decommision, shutdown the instance first, then remove the ID from the list.
+# The order of the list does not matter.
+SPOT_INSTANCE_IDS = ["permanentID1", "permanentID2"]
+
 CONCURRENCY_PER_CONTROLLER_WORKFLOW = 5 # max number of requests that are being processed
 MAX_BUFFERED_REQUESTS = 20 # max number of requests that are in the buffer
 
 REQUEST_QUEUE = "RequestQueue"
 CHILD_COMPLETE_CHANNEL_PREFIX = "ChildComplete_"
+
 DA_CURRENT_WAIT_CHILD_WFS = "CurrentWaitChildWfs"
+DA_INSTANCE_ID = "InstanceId"
+DA_SHUTDOWN = "Shutdown"
 
 
 
@@ -41,6 +51,8 @@ class ControllerWorkflow(ObjectWorkflow):
     def get_persistence_schema(self) -> PersistenceSchema:
         return PersistenceSchema.create(
             PersistenceField.data_attribute_def(DA_CURRENT_WAIT_CHILD_WFS, List),
+            PersistenceField.data_attribute_def(DA_INSTANCE_ID, str),
+            PersistenceField.data_attribute_def(DA_SHUTDOWN, bool),
         )
 
     def get_communication_schema(self) -> CommunicationSchema:
@@ -48,10 +60,22 @@ class ControllerWorkflow(ObjectWorkflow):
             CommunicationMethod.internal_channel_def(REQUEST_QUEUE, Request),
             CommunicationMethod.internal_channel_def_by_prefix(CHILD_COMPLETE_CHANNEL_PREFIX, type(None)),
         )
-    
 
     @rpc()
-    def enqueue(self, ctx: WorkflowContext, input: dict, communication: Communication) -> bool:
+    def shutdown(self, ctx: WorkflowContext, persistence: Persistence, communication: Communication):
+        shutdown = persistence.get_data_attribute(DA_SHUTDOWN) or False
+        if shutdown:
+            return False
+        persistence.set_data_attribute(DA_SHUTDOWN, True)
+        return True
+
+
+    @rpc()
+    def enqueue(self, ctx: WorkflowContext, input: dict, persistence: Persistence, communication: Communication) -> bool:
+        shutdown = persistence.get_data_attribute(DA_SHUTDOWN) or False
+        if shutdown:
+            return False
+
         if communication.get_internal_channel_size(REQUEST_QUEUE)+1 > MAX_BUFFERED_REQUESTS:
             return False
         # a bug in SDK: https://github.com/indeedeng/iwf-python-sdk/issues/75
@@ -93,7 +117,8 @@ class LoopForNextRequestState(WorkflowState[None]):
 
     def execute(self, ctx: WorkflowContext, input: None, command_results: CommandResults, persistence: Persistence, communication: Communication) -> StateDecision:
         new_wait_list = persistence.get_data_attribute(DA_CURRENT_WAIT_CHILD_WFS)
-        
+        instance_id = persistence.get_data_attribute(DA_INSTANCE_ID)
+
         for command_result in command_results.internal_channel_commands:
             channel_name = command_result.channel_name
             if channel_name == REQUEST_QUEUE:
@@ -103,11 +128,14 @@ class LoopForNextRequestState(WorkflowState[None]):
                     try:
                         from iwf_config import client
                         from processing_workflow import ProcessingWorkflow
-                        from processing_workflow import PARENT_WORKFLOW_ID
+                        from processing_workflow import DA_PARENT_WORKFLOW_ID
                         client.start_workflow(
                             ProcessingWorkflow, child_workflow_id, 3600, request,
                             WorkflowOptions(
-                                    initial_data_attributes={PARENT_WORKFLOW_ID:ctx.workflow_id},
+                                    initial_data_attributes={
+                                        DA_PARENT_WORKFLOW_ID:ctx.workflow_id,
+                                        DA_INSTANCE_ID: instance_id
+                                    },
                                     workflow_id_reuse_policy=IDReusePolicy.DISALLOW_REUSE,
                                     workflow_already_started_options=
                                         WorkflowAlreadyStartedOptions(
@@ -127,8 +155,21 @@ class LoopForNextRequestState(WorkflowState[None]):
                     new_wait_list.remove(child_wf_id)
         
         persistence.set_data_attribute(DA_CURRENT_WAIT_CHILD_WFS, new_wait_list)
-        
+
+        shutdown = persistence.get_data_attribute(DA_SHUTDOWN)
+
         if not new_wait_list:
             # atomically check if we can close this workflow 
             return StateDecision.force_complete_if_internal_channel_empty_or_else(REQUEST_QUEUE, "done", LoopForNextRequestState)
-        return StateDecision.single_next_state(LoopForNextRequestState)
+        elif shutdown:
+            return StateDecision.single_next_state(MoveToAnotherInstanceState)
+        else:
+            return StateDecision.single_next_state(LoopForNextRequestState)
+
+
+class MoveToAnotherInstanceState(WorkflowState[None]):
+    def execute(self, ctx: WorkflowContext, input: Request, command_results: CommandResults, persistence: Persistence,
+                communication: Communication) -> StateDecision:
+        print("call the API in main.py to move all the started child workflows to another instance")
+
+        return StateDecision.graceful_complete_workflow("moved to another instance")
