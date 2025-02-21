@@ -54,7 +54,7 @@ class CreateDebitMemoState(WorkflowState[TransferRequest]):
 
     def get_state_options(self) -> WorkflowStateOptions:
         return WorkflowStateOptions(
-            execute_failure_handling_state=CompensateState,
+            proceed_to_state_when_execute_retry_exhausted=CompensateState,
             execute_api_retry_policy=RetryPolicy(
                 maximum_attempts_duration_seconds=3600,
                 # replace with this to try a shorter retry
@@ -78,7 +78,7 @@ class DebitState(WorkflowState[TransferRequest]):
 
     def get_state_options(self) -> WorkflowStateOptions:
         return WorkflowStateOptions(
-            execute_failure_handling_state=CompensateState,
+            proceed_to_state_when_execute_retry_exhausted=CompensateState,
             execute_api_retry_policy=RetryPolicy(
                 maximum_attempts_duration_seconds=3600,
             )
@@ -100,7 +100,7 @@ class CreateCreditMemoState(WorkflowState[TransferRequest]):
 
     def get_state_options(self) -> WorkflowStateOptions:
         return WorkflowStateOptions(
-            execute_failure_handling_state=CompensateState,
+            proceed_to_state_when_execute_retry_exhausted=CompensateState,
             execute_api_retry_policy=RetryPolicy(
                 maximum_attempts_duration_seconds=3600,
             )
@@ -123,7 +123,7 @@ class CreditState(WorkflowState[TransferRequest]):
 
     def get_state_options(self) -> WorkflowStateOptions:
         return WorkflowStateOptions(
-            execute_failure_handling_state=CompensateState,
+            proceed_to_state_when_execute_retry_exhausted=CompensateState,
             execute_api_retry_policy=RetryPolicy(
                 maximum_attempts_duration_seconds=3600,
             )

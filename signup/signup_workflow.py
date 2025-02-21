@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import timedelta
 
 from iwf.command_request import CommandRequest, InternalChannelCommand, TimerCommand
 from iwf.command_results import CommandResults
@@ -54,9 +53,7 @@ class VerifyState(WorkflowState[None]):
         communication: Communication,
     ) -> CommandRequest:
         return CommandRequest.for_any_command_completed(
-            TimerCommand.timer_command_by_duration(
-                timedelta(seconds=10)
-            ),  # use 10 seconds for demo
+            TimerCommand.by_seconds(10),  # use 10 seconds for demo
             InternalChannelCommand.by_name(verify_channel),
         )
 
@@ -93,7 +90,7 @@ class UserSignupWorkflow(ObjectWorkflow):
 
     def get_communication_schema(self) -> CommunicationSchema:
         return CommunicationSchema.create(
-            CommunicationMethod.internal_channel_def(verify_channel, None)
+            CommunicationMethod.internal_channel_def(verify_channel, type(None))
         )
 
     @rpc(

@@ -17,7 +17,7 @@ from moneytransfer.money_transfer_workflow import TransferRequest, MoneyTransfer
 flask_app = Flask(__name__)
 
 
-# http://localhost:8802/moneytransfer/start
+# http://localhost:8802/moneytransfer/start?fromAccount=long&toAccount=github&amount=10&notes=testnotest
 @flask_app.route("/moneytransfer/start")
 def money_transfer_start():
     from_account = request.args["fromAccount"]
