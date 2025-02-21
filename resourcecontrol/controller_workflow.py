@@ -46,7 +46,11 @@ DA_SHUTDOWN = "Shutdown"
 
 class ControllerWorkflow(ObjectWorkflow):
     def get_workflow_states(self) -> StateSchema:
-        return StateSchema.with_starting_state(InitState(), LoopForNextRequestState())
+        return StateSchema.with_starting_state(
+            InitState(),
+            LoopForNextRequestState(),
+            MoveToAnotherInstanceState()
+        )
 
     def get_persistence_schema(self) -> PersistenceSchema:
         return PersistenceSchema.create(
@@ -158,18 +162,18 @@ class LoopForNextRequestState(WorkflowState[None]):
 
         shutdown = persistence.get_data_attribute(DA_SHUTDOWN)
 
+        if shutdown:
+            return StateDecision.single_next_state(MoveToAnotherInstanceState)
         if not new_wait_list:
             # atomically check if we can close this workflow 
             return StateDecision.force_complete_if_internal_channel_empty_or_else(REQUEST_QUEUE, "done", LoopForNextRequestState)
-        elif shutdown:
-            return StateDecision.single_next_state(MoveToAnotherInstanceState)
-        else:
-            return StateDecision.single_next_state(LoopForNextRequestState)
+        return StateDecision.single_next_state(LoopForNextRequestState)
 
 
 class MoveToAnotherInstanceState(WorkflowState[None]):
     def execute(self, ctx: WorkflowContext, input: Request, command_results: CommandResults, persistence: Persistence,
                 communication: Communication) -> StateDecision:
+        # TODO: need to get all the current started child workflow from persistence
         print("call the API in main.py to move all the started child workflows to another instance")
 
         return StateDecision.graceful_complete_workflow("moved to another instance")
