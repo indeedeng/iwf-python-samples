@@ -336,14 +336,14 @@ files = [
 
 [[package]]
 name = "iwf-python-sdk"
-version = "0.6.1"
+version = "0.7.0"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "iwf_python_sdk-0.6.1-py3-none-any.whl", hash = "sha256:3678bf27232032978d953855a15d985e6507d8bc510983b5e3e39fc4b7cf9805"},
-    {file = "iwf_python_sdk-0.6.1.tar.gz", hash = "sha256:da33a3066d0b3dc8a5271bd254190b5aa27b73ae9d93a1549948f868cd04f042"},
+    {file = "iwf_python_sdk-0.7.0-py3-none-any.whl", hash = "sha256:577630f7a7799339bf7e7c06d147127f5af341365de1b5d324edc931a0ea4b00"},
+    {file = "iwf_python_sdk-0.7.0.tar.gz", hash = "sha256:bcef86826ca6423066f018d314216875f09e35c139099493625634a3682becbe"},
 ]
 
 [package.dependencies]
@@ -750,4 +750,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "43d0c924d0983a7bbb561365bfdcc1253b56f6a4f36e12b5936bb6dcc8c411ca"
+content-hash = "253ea4d8f85fd016abe7e2df8e3b84abf458c7e42036cfa3995f57e228eb0b40"
