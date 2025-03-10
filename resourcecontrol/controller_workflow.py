@@ -75,17 +75,15 @@ class ControllerWorkflow(ObjectWorkflow):
 
 
     @rpc()
-    def enqueue(self, ctx: WorkflowContext, input: dict, persistence: Persistence, communication: Communication) -> bool:
+    def enqueue(self, ctx: WorkflowContext, input: Request, persistence: Persistence, communication: Communication) -> bool:
         shutdown = persistence.get_data_attribute(DA_SHUTDOWN) or False
         if shutdown:
             return False
 
         if communication.get_internal_channel_size(REQUEST_QUEUE)+1 > MAX_BUFFERED_REQUESTS:
             return False
-        # a bug in SDK: https://github.com/indeedeng/iwf-python-sdk/issues/75
-        # needs a workaround for now
-        req = Request(input["id"], input["data"])
-        communication.publish_to_internal_channel(REQUEST_QUEUE, req)
+
+        communication.publish_to_internal_channel(REQUEST_QUEUE, input)
         return True
 
     @rpc()
