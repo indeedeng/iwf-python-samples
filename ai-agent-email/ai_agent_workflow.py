@@ -1,3 +1,7 @@
+import os
+import smtplib
+from dataclasses import dataclass
+
 from iwf.command_request import CommandRequest, TimerCommand, InternalChannelCommand
 from iwf.command_results import CommandResults
 from iwf.communication import Communication
@@ -11,6 +15,7 @@ from iwf.workflow import ObjectWorkflow
 from iwf.workflow_context import WorkflowContext
 from iwf.workflow_state import WorkflowState
 from iwf.workflow_state_options import WorkflowStateOptions
+from openai import OpenAI
 
 
 class EmailAgentWorkflow(ObjectWorkflow):
@@ -129,7 +134,26 @@ class SendingState(WorkflowState[None]):
             communication: Communication,
     ) -> StateDecision:
         persistence.set_data_attribute(DA_STATUS, STATUS_SENT)
-        # TODO send the email here
+
+        google_email = os.environ.get('GOOGLE_EMAIL_ADDRESS')
+        google_email_app_password = os.environ.get('GOOGLE_EMAIL_APP_PASSWORD')
+
+        if not google_email or not google_email_app_password:
+            raise StateDecision.force_fail_workflow("not provided google email credentials")
+
+        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        smtp_server.ehlo()
+        smtp_server.login(google_email, google_email_app_password)
+
+        sent_to = persistence.get_data_attribute(DA_EMAIL_RECIPIENT)
+        subject = persistence.get_data_attribute(DA_EMAIL_SUBJECT)
+        body = persistence.get_data_attribute(DA_EMAIL_BODY)
+
+        message = 'Subject: {}\n\n{}'.format(subject, body)
+
+        smtp_server.sendmail(google_email, sent_to, message)
+        smtp_server.quit()
+
         return StateDecision.graceful_complete_workflow()
 
     def get_state_options(self) -> WorkflowStateOptions:
@@ -177,3 +201,23 @@ class ScheduleState(WorkflowState[None]):
             # customize the timeout to let OpenAI run longer
             execute_api_timeout_seconds=90
         )
+
+
+@dataclass
+class ProcessResponse:
+    send_time_unix_seconds: int
+    subject: str
+    body: str
+    
+
+def process_user_request(req: str) -> ProcessResponse:
+    client = OpenAI()
+
+    response = client.responses.create(
+        model="gpt-4o",
+        input="Tell me a three sentence bedtime story about a unicorn."
+    )
+
+    return ProcessResponse(
+        send_time_unix_seconds=100
+    )

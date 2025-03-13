@@ -1,5 +1,3 @@
-## How to run
-
 ## How to Run
 
 To run the `main.py` script located in the `ai-agent-email` directory, follow the steps below:
@@ -17,8 +15,9 @@ Make sure you have the following installed and set up:
 Before running the script, ensure the following environment variables are properly configured in your system:
 
 - `OPENAI_API_KEY`: Your OpenAI API key.
-- `GOOGLE_EMAIL_ADDRESS`: The email address you'll use for sending emails.
-- `GOOGLE_EMAIL_APP_PASSWORD`: The application password for your Google account.
+- `GOOGLE_EMAIL_ADDRESS`: The email address you'll use for sending emails. E.g. qlong.seattle@gmail.com
+- `GOOGLE_EMAIL_APP_PASSWORD`: The application password for your Google account. You can go
+  to [Google app password](security.google.com/settings/security/apppasswords) to create a password for your account.
 
 You can set these variables in your shell profile file (e.g., `.bashrc`, `.zshrc`, etc.) or export them before running
 the script:

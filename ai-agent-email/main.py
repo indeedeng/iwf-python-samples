@@ -1,5 +1,3 @@
-import smtplib
-import time
 import traceback
 
 from flask import Flask, request
@@ -11,24 +9,18 @@ from iwf.iwf_api.models import (
 from iwf.worker_service import (
     WorkerService,
 )
-from openai import OpenAI
 
-from moneytransfer.iwf_config import client, worker_service
-from moneytransfer.money_transfer_workflow import TransferRequest, MoneyTransferWorkflow
+from ai_agent_workflow import EmailAgentWorkflow
+from iwf_config import client, worker_service
 
 flask_app = Flask(__name__)
 
 
-# http://localhost:8802/moneytransfer/start?fromAccount=long&toAccount=github&amount=10&notes=testnotest
-@flask_app.route("/moneytransfer/start")
-def money_transfer_start():
-    from_account = request.args["fromAccount"]
-    to_account = request.args["toAccount"]
-    amount = request.args["amount"]
-    notes = request.args["notes"]
-    transfer_request = TransferRequest(from_account, to_account, int(amount), notes)
-
-    client.start_workflow(MoneyTransferWorkflow, "money_transfer" + str(time.time()), 3600, transfer_request)
+# http://localhost:8802/api/ai-agent/start?workflowId="123"
+@flask_app.route("/api/ai-agent/start")
+def ai_agent_start():
+    wf_id = request.args["workflowId"]
+    client.start_workflow(EmailAgentWorkflow, wf_id, 86400)
     return "workflow started"
 
 
@@ -73,34 +65,4 @@ def main():
 
 
 if __name__ == "__main__":
-    client = OpenAI()
-
-    response = client.responses.create(
-        model="gpt-4o",
-        input="Tell me a three sentence bedtime story about a unicorn."
-    )
-
-    from agents import Agent, Runner
-
-    agent = Agent(name="Assistant", instructions="You are a helpful assistant")
-
-    result = Runner.run_sync(agent, "Write a haiku about recursion in programming.")
-    print(result.final_output)
-
-    YOUR_GOOGLE_EMAIL = 'prclqz@gmail.com'  # The email you setup to send the email using app password
-    YOUR_GOOGLE_EMAIL_APP_PASSWORD = 'pmsy hngl aiok tlch'  # The app password you generated
-
-    smtpserver = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-    smtpserver.ehlo()
-    smtpserver.login(YOUR_GOOGLE_EMAIL, YOUR_GOOGLE_EMAIL_APP_PASSWORD)
-
-    # Test send mail
-    sent_from = YOUR_GOOGLE_EMAIL
-    sent_to = sent_from  # Send it to self (as test)
-    email_text = 'This is a test'
-    smtpserver.sendmail(sent_from, sent_to, email_text)
-
-    # Close the connection
-    smtpserver.close()
-
-    # main()
+    main()
