@@ -16,7 +16,12 @@ from iwf_config import client, worker_service
 flask_app = Flask(__name__)
 
 
-# http://localhost:8802/api/ai-agent/start?workflowId="test"
+@flask_app.route("/")
+def index():
+    return "iwf workflow home"
+
+
+# http://localhost:8802/api/ai-agent/start?workflowId=test
 @flask_app.route("/api/ai-agent/start")
 def ai_agent_start():
     wf_id = request.args["workflowId"]
@@ -24,7 +29,7 @@ def ai_agent_start():
     return "workflow started"
 
 
-# http://localhost:8802/api/ai-agent/request?workflowId="test"&request="help me write an email to qlong.seattle@gmail.com to say thank you"
+# http://localhost:8802/api/ai-agent/request?workflowId=test&request="help me write an email to qlong.seattle@gmail.com to say thank you"
 @flask_app.route("/api/ai-agent/request")
 def ai_agent_request():
     wf_id = request.args["workflowId"]
@@ -33,9 +38,21 @@ def ai_agent_request():
     return "{0}".format(resp)
 
 
-@flask_app.route("/")
-def index():
-    return "iwf workflow home"
+# http://localhost:8802/api/ai-agent/describe?workflowId=test
+@flask_app.route("/api/ai-agent/describe")
+def ai_agent_describe():
+    wf_id = request.args["workflowId"]
+    wf_details = client.invoke_rpc(wf_id, EmailAgentWorkflow.describe)
+    return wf_details
+
+
+# http://localhost:8802/api/ai-agent/save_draft?workflowId=test&draft="this is a draft"
+@flask_app.route("/api/ai-agent/save_draft")
+def ai_agent_save_draft():
+    wf_id = request.args["workflowId"]
+    draft = request.args["draft"]
+    client.invoke_rpc(wf_id, EmailAgentWorkflow.save_draft, draft)
+    return "saved"
 
 
 # below are iWF workflow worker APIs to be called by iWF server

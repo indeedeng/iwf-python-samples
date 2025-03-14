@@ -1,5 +1,7 @@
 import os
 import smtplib
+import time
+from dataclasses import dataclass
 
 from agents import AgentOutputSchema
 from agents.models.openai_responses import Converter
@@ -19,6 +21,18 @@ from iwf.workflow_state import WorkflowState
 from iwf.workflow_state_options import WorkflowStateOptions
 from openai import OpenAI
 from pydantic import BaseModel
+
+
+@dataclass
+class WorkflowDetails:
+    status: str
+    current_request: str
+    current_request_draft: str
+    response_id: str
+    email_recipient: str
+    email_subject: str
+    email_body: str
+    send_time_seconds: str
 
 
 class EmailAgentWorkflow(ObjectWorkflow):
@@ -48,14 +62,40 @@ class EmailAgentWorkflow(ObjectWorkflow):
         )
 
     @rpc()
-    def send_request(self, ctx: WorkflowContext, input: str, persistence: Persistence,
-                     communication: Communication) -> bool:
+    def send_request(self, input: str, persistence: Persistence, communication: Communication) -> bool:
         status = persistence.get_data_attribute(DA_STATUS)
         if status == STATUS_WAITING:
+            persistence.set_data_attribute(DA_CURRENT_REQUEST_DRAFT, "")
             communication.publish_to_internal_channel(CH_USER_INPUT, input)
             return True
         else:
             return False
+
+    @rpc()
+    def describe(self, persistence: Persistence) -> WorkflowDetails:
+        status = persistence.get_data_attribute(DA_STATUS)
+        current_request = persistence.get_data_attribute(DA_CURRENT_REQUEST)
+        current_request_draft = persistence.get_data_attribute(DA_CURRENT_REQUEST_DRAFT)
+        response_id = persistence.get_data_attribute(DA_PREVIOUS_RESPONSE_ID)
+        email_recipient = persistence.get_data_attribute(DA_EMAIL_RECIPIENT)
+        email_subject = persistence.get_data_attribute(DA_EMAIL_SUBJECT)
+        email_body = persistence.get_data_attribute(DA_EMAIL_BODY)
+        send_time_seconds = persistence.get_data_attribute(DA_SCHEDULED_TIME_SECONDS)
+
+        return WorkflowDetails(
+            status=status,
+            current_request=current_request,
+            current_request_draft=current_request_draft,
+            response_id=response_id,
+            email_recipient=email_recipient,
+            email_subject=email_subject,
+            email_body=email_body,
+            send_time_seconds=send_time_seconds
+        )
+
+    @rpc()
+    def save_draft(self, draft: str, persistence: Persistence):
+        persistence.set_data_attribute(DA_CURRENT_REQUEST_DRAFT, draft)
 
 
 # represents the status of the current workflow execution, is one of below:
@@ -133,7 +173,7 @@ class AgentState(WorkflowState[None]):
         send_time = persistence.get_data_attribute(DA_SCHEDULED_TIME_SECONDS)
         recipient = persistence.get_data_attribute(DA_EMAIL_RECIPIENT)
         body = persistence.get_data_attribute(DA_EMAIL_BODY)
-        if send_time > 0 and recipient and body:
+        if send_time and send_time > 0 and recipient and body:
             # now we can schedule to send email
             return StateDecision.single_next_state(ScheduleState)
         else:
@@ -237,15 +277,16 @@ def process_user_request(req: str, persistence: Persistence) -> AgentResponse:
 def do_process_user_request(req: str, previous_response_id: str | None):
     client = OpenAI()
 
+    current_timestamp = int(time.time())
     response = client.responses.create(
         model="gpt-4o",
-        instructions="""
+        instructions=f"""
         Help prepare an email to be sent. Based on user requests, return email's subject, body, recipient 
         , sending time and/or cancel_operation, if any of them available. 
         The email subject or body may need to be translated if user requests to.
-        The email subject and body should be complete, do not leave any place holders there. 
+        The email subject and body must be complete, do not leave any place holders like [Your Name]. 
         The email's recipient should be in a valid email format, other wise, return empty string for that field.
-        The sending time must be in unix timestamp in seconds, for example, 1741928839. 
+        The sending time must be in unix timestamp in seconds, for example, the current timestamp is {current_timestamp}. 
         User may provide an relative time based on today/now, you should calculate the timestamp based on offset. For example, tomorrow means current timestamp plus 86400.
         User may also ask to cancel the emailing operation, then return true for cancel_operation field.
         All the fields are optional.
