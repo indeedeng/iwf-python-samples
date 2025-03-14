@@ -106,8 +106,14 @@ const App: React.FC = () => {
       }
       setUserInput(''); // Clear input after sending
       
-      // Fetch updated details after sending a request
-      fetchWorkflowDetails();
+      // Fetch updated details immediately after sending a request
+      await fetchWorkflowDetails();
+      
+      // Set up a series of follow-up calls to get the latest status
+      // This helps to capture the state transition more quickly
+      setTimeout(() => fetchWorkflowDetails(), 1000);
+      setTimeout(() => fetchWorkflowDetails(), 3000);
+      setTimeout(() => fetchWorkflowDetails(), 6000);
     } catch (error) {
       console.error('Error sending request:', error);
     } finally {

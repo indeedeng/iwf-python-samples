@@ -67,6 +67,7 @@ class EmailAgentWorkflow(ObjectWorkflow):
         if status == STATUS_WAITING:
             persistence.set_data_attribute(DA_CURRENT_REQUEST_DRAFT, "")
             communication.publish_to_internal_channel(CH_USER_INPUT, input)
+            persistence.set_data_attribute(DA_STATUS, STATUS_PROCESSING)
             return True
         else:
             return False
@@ -103,6 +104,7 @@ class EmailAgentWorkflow(ObjectWorkflow):
 DA_STATUS = "Status"
 STATUS_INITIALIZED = "initialized"
 STATUS_WAITING = "waiting"
+STATUS_PROCESSING = "processing"
 STATUS_SENT = "sent"
 STATUS_FAILED = "failed"
 
