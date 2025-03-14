@@ -16,12 +16,21 @@ from iwf_config import client, worker_service
 flask_app = Flask(__name__)
 
 
-# http://localhost:8802/api/ai-agent/start?workflowId="123"
+# http://localhost:8802/api/ai-agent/start?workflowId="test"
 @flask_app.route("/api/ai-agent/start")
 def ai_agent_start():
     wf_id = request.args["workflowId"]
     client.start_workflow(EmailAgentWorkflow, wf_id, 86400)
     return "workflow started"
+
+
+# http://localhost:8802/api/ai-agent/request?workflowId="test"&request="help me write an email to qlong.seattle@gmail.com to say thank you"
+@flask_app.route("/api/ai-agent/request")
+def ai_agent_request():
+    wf_id = request.args["workflowId"]
+    req = request.args["request"]
+    resp = client.invoke_rpc(wf_id, EmailAgentWorkflow.send_request, req)
+    return "{0}".format(resp)
 
 
 @flask_app.route("/")
@@ -57,6 +66,7 @@ def handle_rpc():
 # the WebUI will be able to show you the error with stacktrace
 @flask_app.errorhandler(Exception)
 def internal_error(exception):
+    print(traceback.format_exc())
     return traceback.format_exc(), 500
 
 
