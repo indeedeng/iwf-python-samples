@@ -42,7 +42,8 @@ const App: React.FC = () => {
 
   // Effect to fetch workflow details when workflowId is available
   useEffect(() => {
-    const fetchWorkflowDetailsInEffect = async () => {
+    // Create separate functions for initial load and refresh
+    const fetchWorkflowDetailsInitial = async () => {
       try {
         const res = await fetch(`/api/ai-agent/describe?workflowId=${workflowId}`);
         if (res.ok) {
@@ -50,15 +51,47 @@ const App: React.FC = () => {
           const text = await res.text();
           try {
             const data = JSON.parse(text);
-            console.log('Email details fetched:', data);
+            console.log('Email details fetched (initial):', data);
             setEmailDetails(data);
             
             // Set the draft text from the API if the user hasn't typed anything yet
+            // This happens only on initial load
             if (data.current_request_draft && userInput === '') {
               setUserInput(data.current_request_draft);
+              setLastSavedDraft(data.current_request_draft);
             }
           } catch (parseError) {
             // If it's not valid JSON, use the text response
+            setErrorMessage(`Error parsing JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+            console.error('Error parsing JSON response:', parseError);
+            console.log('Raw response:', text);
+          }
+        } else {
+          const errorText = await res.text();
+          setErrorMessage(`Failed to fetch workflow details: ${errorText}`);
+          console.error('Failed to fetch workflow details:', errorText);
+        }
+      } catch (error) {
+        setErrorMessage(`Error fetching workflow details: ${error instanceof Error ? error.message : String(error)}`);
+        console.error('Error fetching workflow details:', error);
+      }
+    };
+    
+    // This function is for refresh only - it doesn't set the draft input
+    const fetchWorkflowDetailsRefresh = async () => {
+      try {
+        const res = await fetch(`/api/ai-agent/describe?workflowId=${workflowId}`);
+        if (res.ok) {
+          // Try to parse as JSON first
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
+            console.log('Email details fetched (refresh):', data);
+            setEmailDetails(data);
+            // Intentionally NOT updating the input box with the draft here
+          } catch (parseError) {
+            // If it's not valid JSON, use the text response
+            setErrorMessage(`Error parsing JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
             console.error('Error parsing JSON response:', parseError);
             console.log('Raw response:', text);
           }
@@ -74,15 +107,16 @@ const App: React.FC = () => {
     };
 
     if (workflowId) {
-      fetchWorkflowDetailsInEffect();
+      // Call initial function for the first load
+      fetchWorkflowDetailsInitial();
 
-      // Set up polling every 3 seconds
-      const intervalId = setInterval(fetchWorkflowDetailsInEffect, 3000);
+      // Set up polling every 3 seconds with the refresh function
+      const intervalId = setInterval(fetchWorkflowDetailsRefresh, 3000);
       
       // Clean up interval on unmount
       return () => clearInterval(intervalId);
     }
-  }, [workflowId, userInput.length === 0]);
+  }, [workflowId]);
   
   // Effect to auto-save drafts on a fixed interval (not on every keystroke)
   useEffect(() => {
@@ -130,6 +164,7 @@ const App: React.FC = () => {
     };
   }, [workflowId, userInput, lastSavedDraft]);
 
+  // Used only for manual refresh, not interval polling
   const fetchWorkflowDetails = async () => {
     try {
       const res = await fetch(`/api/ai-agent/describe?workflowId=${workflowId}`);
@@ -138,17 +173,13 @@ const App: React.FC = () => {
         const text = await res.text();
         try {
           const data = JSON.parse(text);
-          console.log('Email details fetched:', data);
+          console.log('Email details fetched (manual):', data);
           setEmailDetails(data);
           
-          // Set the draft text from the API if the user hasn't typed anything yet
-          if (data.current_request_draft && userInput === '') {
-            setUserInput(data.current_request_draft);
-            // Track this loaded draft as the last saved draft
-            setLastSavedDraft(data.current_request_draft);
-          }
+          // We do NOT set the input from the draft here
         } catch (parseError) {
           // If it's not valid JSON, use the text response
+          setErrorMessage(`Error parsing JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
           console.error('Error parsing JSON response:', parseError);
           console.log('Raw response:', text);
         }
@@ -250,6 +281,9 @@ const App: React.FC = () => {
               setEmailDetails(data);
               // Clear error on successful fetch
               setErrorMessage('');
+              
+              // We do NOT update the input box with draft here
+              // This keeps the sendRequest behavior consistent with our change
             } catch (parseError) {
               setErrorMessage(`Error parsing JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
               console.error('Error parsing JSON response:', parseError);
