@@ -226,14 +226,24 @@ class AgentResponse(BaseModel):
 
 
 def process_user_request(req: str, persistence: Persistence) -> AgentResponse:
+    response = do_process_user_request(req, persistence.get_data_attribute(DA_PREVIOUS_RESPONSE_ID))
+    if isinstance(response.id, str):
+        persistence.set_data_attribute(DA_PREVIOUS_RESPONSE_ID, response.id)
+
+    resp = response.output[0].content[0].text
+    return AgentResponse.model_validate_json(resp)
+
+
+def do_process_user_request(req: str, previous_response_id: str | None):
     client = OpenAI()
 
     response = client.responses.create(
         model="gpt-4o",
         instructions="""
         Help prepare an email to be sent. Based on user requests, return email's subject, body, recipient 
-        , sending time and cancel_operation, if any of them available. 
+        , sending time and/or cancel_operation, if any of them available. 
         The email subject or body may need to be translated if user requests to.
+        The email subject and body should be complete, do not leave any place holders there. 
         The email's recipient should be in a valid email format, other wise, return empty string for that field.
         The sending time must be in unix timestamp in seconds, for example, 1741928839. 
         User may provide an relative time based on today/now, you should calculate the timestamp based on offset. For example, tomorrow means current timestamp plus 86400.
@@ -245,18 +255,15 @@ def process_user_request(req: str, persistence: Persistence) -> AgentResponse:
         If there is no sending time, return 0 for the field.
         If not asking to cancel emailing, return false for the field.
         """,
-        # input="help me write an email to qlong@indeed.com to thank him helping me watering my garden. I will visit him next time.",
-        input="send it on the day after tomorrow",
+        input=req,
         text=Converter.get_response_format(
             AgentOutputSchema(AgentResponse)
         ),
-        previous_response_id=persistence.get_data_attribute(DA_PREVIOUS_RESPONSE_ID)
+        previous_response_id=previous_response_id
     )
-    if isinstance(response.previous_response_id, str):
-        persistence.set_data_attribute(DA_PREVIOUS_RESPONSE_ID, response.previous_response_id)
-
-    resp = response.output[0].content[0].text
-    return AgentResponse.model_validate_json(resp)
+    from pprint import pprint
+    pprint(response)
+    return response
 
 
 def get_timer_duration(send_time: int) -> int:
