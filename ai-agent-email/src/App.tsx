@@ -26,6 +26,8 @@ const App: React.FC = () => {
   const [userInput, setUserInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [emailDetails, setEmailDetails] = useState<EmailDetails | null>(null);
+  const [isDraftSaving, setIsDraftSaving] = useState<boolean>(false);
+  const [lastSavedDraft, setLastSavedDraft] = useState<string>('');
 
   useEffect(() => {
     // Check for workflowId in URL parameters on component mount
@@ -39,16 +41,85 @@ const App: React.FC = () => {
 
   // Effect to fetch workflow details when workflowId is available
   useEffect(() => {
+    const fetchWorkflowDetailsInEffect = async () => {
+      try {
+        const res = await fetch(`/api/ai-agent/describe?workflowId=${workflowId}`);
+        if (res.ok) {
+          // Try to parse as JSON first
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
+            console.log('Email details fetched:', data);
+            setEmailDetails(data);
+            
+            // Set the draft text from the API if the user hasn't typed anything yet
+            if (data.current_request_draft && userInput === '') {
+              setUserInput(data.current_request_draft);
+            }
+          } catch (parseError) {
+            // If it's not valid JSON, use the text response
+            console.error('Error parsing JSON response:', parseError);
+            console.log('Raw response:', text);
+          }
+        } else {
+          console.error('Failed to fetch workflow details:', await res.text());
+        }
+      } catch (error) {
+        console.error('Error fetching workflow details:', error);
+      }
+    };
+
     if (workflowId) {
-      fetchWorkflowDetails();
+      fetchWorkflowDetailsInEffect();
 
       // Set up polling every 3 seconds
-      const intervalId = setInterval(fetchWorkflowDetails, 3000);
+      const intervalId = setInterval(fetchWorkflowDetailsInEffect, 3000);
       
       // Clean up interval on unmount
       return () => clearInterval(intervalId);
     }
-  }, [workflowId]);
+  }, [workflowId, userInput.length === 0]);
+  
+  // Effect to auto-save drafts on a fixed interval (not on every keystroke)
+  useEffect(() => {
+    let saveInterval: NodeJS.Timeout | null = null;
+    
+    // Define the save draft function inside the effect to capture the latest state
+    const saveDraftInInterval = async () => {
+      if (!workflowId || !userInput.trim()) return;
+      
+      // Only save if the draft has changed 
+      if (userInput !== lastSavedDraft) {
+        try {
+          setIsDraftSaving(true);
+          const encodedDraft = encodeURIComponent(userInput);
+          const res = await fetch(`/api/ai-agent/save_draft?workflowId=${workflowId}&draft=${encodedDraft}`);
+          
+          if (res.ok) {
+            // Update last saved draft
+            setLastSavedDraft(userInput);
+          } else {
+            console.error('Failed to save draft:', await res.text());
+          }
+        } catch (error) {
+          console.error('Error saving draft:', error);
+        } finally {
+          setIsDraftSaving(false);
+        }
+      }
+    };
+    
+    if (workflowId) {
+      // Set up interval to auto-save every 5 seconds
+      saveInterval = setInterval(saveDraftInInterval, 5000);
+    }
+    
+    return () => {
+      if (saveInterval) {
+        clearInterval(saveInterval);
+      }
+    };
+  }, [workflowId, userInput, lastSavedDraft]);
 
   const fetchWorkflowDetails = async () => {
     try {
@@ -60,6 +131,13 @@ const App: React.FC = () => {
           const data = JSON.parse(text);
           console.log('Email details fetched:', data);
           setEmailDetails(data);
+          
+          // Set the draft text from the API if the user hasn't typed anything yet
+          if (data.current_request_draft && userInput === '') {
+            setUserInput(data.current_request_draft);
+            // Track this loaded draft as the last saved draft
+            setLastSavedDraft(data.current_request_draft);
+          }
         } catch (parseError) {
           // If it's not valid JSON, use the text response
           console.error('Error parsing JSON response:', parseError);
@@ -70,6 +148,31 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching workflow details:', error);
+    }
+  };
+
+  // Manual draft saving (not used in the current UI)
+  const saveDraft = async () => {
+    if (!workflowId || !userInput.trim()) return;
+    
+    // Only save if the draft has changed 
+    if (userInput !== lastSavedDraft) {
+      try {
+        setIsDraftSaving(true);
+        const encodedDraft = encodeURIComponent(userInput);
+        const res = await fetch(`/api/ai-agent/save_draft?workflowId=${workflowId}&draft=${encodedDraft}`);
+        
+        if (res.ok) {
+          // Update last saved draft
+          setLastSavedDraft(userInput);
+        } else {
+          console.error('Failed to save draft:', await res.text());
+        }
+      } catch (error) {
+        console.error('Error saving draft:', error);
+      } finally {
+        setIsDraftSaving(false);
+      }
     }
   };
 
@@ -99,21 +202,43 @@ const App: React.FC = () => {
     
     setIsLoading(true);
     try {      
+      // Send the request
       const encodedRequest = encodeURIComponent(userInput);
       const res = await fetch(`/api/ai-agent/request?workflowId=${workflowId}&request=${encodedRequest}`);
       if (!res.ok) {
         console.error('Failed to send request:', await res.text());
       }
-      setUserInput(''); // Clear input after sending
+      
+      // Clear input and reset last saved draft after sending
+      setUserInput('');
+      setLastSavedDraft('');
+      
+      // Function to fetch workflow details
+      const fetchWorkflowDetailsForUpdate = async () => {
+        try {
+          const res = await fetch(`/api/ai-agent/describe?workflowId=${workflowId}`);
+          if (res.ok) {
+            const text = await res.text();
+            try {
+              const data = JSON.parse(text);
+              setEmailDetails(data);
+            } catch (parseError) {
+              console.error('Error parsing JSON response:', parseError);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching workflow details:', error);
+        }
+      };
       
       // Fetch updated details immediately after sending a request
-      await fetchWorkflowDetails();
+      await fetchWorkflowDetailsForUpdate();
       
       // Set up a series of follow-up calls to get the latest status
       // This helps to capture the state transition more quickly
-      setTimeout(() => fetchWorkflowDetails(), 1000);
-      setTimeout(() => fetchWorkflowDetails(), 3000);
-      setTimeout(() => fetchWorkflowDetails(), 6000);
+      setTimeout(() => fetchWorkflowDetailsForUpdate(), 1000);
+      setTimeout(() => fetchWorkflowDetailsForUpdate(), 3000);
+      setTimeout(() => fetchWorkflowDetailsForUpdate(), 6000);
     } catch (error) {
       console.error('Error sending request:', error);
     } finally {
@@ -181,7 +306,7 @@ const App: React.FC = () => {
               <textarea
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
-                placeholder="Enter your request here..."
+                placeholder="Enter your request here... (drafts auto-save)"
                 rows={5}
                 style={{ 
                   width: '100%', 
@@ -213,11 +338,14 @@ const App: React.FC = () => {
                 </button>
               )}
               
-              {emailDetails && (
-                <div style={{ 
-                  textAlign: 'center',
-                  marginTop: '15px'
-                }}>
+              <div style={{ 
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '15px',
+                marginTop: '15px'
+              }}>
+                {emailDetails && (
                   <span style={{ 
                     padding: '5px 15px', 
                     borderRadius: '12px', 
@@ -229,8 +357,18 @@ const App: React.FC = () => {
                   }}>
                     Status: {emailDetails.status}
                   </span>
-                </div>
-              )}
+                )}
+                
+                {isDraftSaving && (
+                  <span style={{ 
+                    fontSize: '12px',
+                    color: '#666',
+                    fontStyle: 'italic'
+                  }}>
+                    Saving draft...
+                  </span>
+                )}
+              </div>
               
               {/* Add "Start New Email" button when email has been sent */}
               {emailDetails && emailDetails.status === 'sent' && (

@@ -107,6 +107,7 @@ STATUS_WAITING = "waiting"
 STATUS_PROCESSING = "processing"
 STATUS_SENT = "sent"
 STATUS_FAILED = "failed"
+STATUS_CANCELED = "canceled"
 
 # store the request from user
 DA_CURRENT_REQUEST = "CurrentRequest"
@@ -161,6 +162,7 @@ class AgentState(WorkflowState[None]):
         user_req = command_results.internal_channel_commands[0].value
         agent_response = process_user_request(user_req, persistence)
         if agent_response.cancel_operation:
+            persistence.set_data_attribute(DA_STATUS, STATUS_CANCELED)
             return StateDecision.graceful_complete_workflow("cancel emailing")
 
         if agent_response.email_send_time_unix_seconds > 0:
