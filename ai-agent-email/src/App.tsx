@@ -21,12 +21,16 @@ interface EmailDetails {
   send_time_seconds: string;
 }
 
+// Minimum time in milliseconds to show the saving indicator
+const MIN_SAVING_INDICATOR_DISPLAY_TIME = 2000;
+
 const App: React.FC = () => {
   const [workflowId, setWorkflowId] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [emailDetails, setEmailDetails] = useState<EmailDetails | null>(null);
   const [isDraftSaving, setIsDraftSaving] = useState<boolean>(false);
+  const [savingStartTime, setSavingStartTime] = useState<number | null>(null);
   const [lastSavedDraft, setLastSavedDraft] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -130,7 +134,10 @@ const App: React.FC = () => {
       // Only save if the draft has changed 
       if (userInput !== lastSavedDraft) {
         try {
+          // Set saving status and record the start time
           setIsDraftSaving(true);
+          setSavingStartTime(Date.now());
+          
           const encodedDraft = encodeURIComponent(userInput);
           const res = await fetch(`/api/ai-agent/save_draft?workflowId=${workflowId}&draft=${encodedDraft}`);
           
@@ -147,9 +154,10 @@ const App: React.FC = () => {
         } catch (error) {
           setErrorMessage(`Error saving draft: ${error instanceof Error ? error.message : String(error)}`);
           console.error('Error saving draft:', error);
-        } finally {
-          setIsDraftSaving(false);
         }
+        
+        // Note: We don't set isDraftSaving to false here anymore
+        // That will be handled by the separate effect that ensures minimum display time
       }
     };
     
@@ -164,6 +172,32 @@ const App: React.FC = () => {
       }
     };
   }, [workflowId, userInput, lastSavedDraft]);
+  
+  // Separate effect to handle the minimum display time for the saving indicator
+  useEffect(() => {
+    let timerId: NodeJS.Timeout | null = null;
+    
+    // If saving just started (savingStartTime is set and isDraftSaving is true)
+    if (savingStartTime !== null && isDraftSaving) {
+      // Calculate how long we need to show the indicator
+      const currentTime = Date.now();
+      const elapsedTime = currentTime - savingStartTime;
+      const remainingTime = Math.max(0, MIN_SAVING_INDICATOR_DISPLAY_TIME - elapsedTime);
+      
+      // Set a timer to hide the indicator after the minimum time has passed
+      timerId = setTimeout(() => {
+        setIsDraftSaving(false);
+        setSavingStartTime(null);
+      }, remainingTime);
+    }
+    
+    // Clean up timer if component unmounts or dependencies change
+    return () => {
+      if (timerId) {
+        clearTimeout(timerId);
+      }
+    };
+  }, [savingStartTime, isDraftSaving]);
 
 
   const startWorkflow = async () => {
@@ -363,9 +397,13 @@ const App: React.FC = () => {
                   
                   {isDraftSaving && (
                     <span style={{ 
-                      fontSize: '12px',
-                      color: '#666',
-                      fontStyle: 'italic'
+                      fontSize: '14px',
+                      backgroundColor: '#e3f2fd',
+                      color: '#1976d2',
+                      fontWeight: 'bold',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      border: '1px solid #bbdefb'
                     }}>
                       Saving draft...
                     </span>
