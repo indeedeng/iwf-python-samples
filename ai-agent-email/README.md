@@ -8,7 +8,8 @@ Make sure you have the following installed and set up:
 
 1. [Python 3.13.2](https://www.python.org/downloads/)
 2. [Poetry](https://python-poetry.org/docs/) for dependency management and virtual environments.
-3. All required environment variables.
+3. [Node.js and npm](https://nodejs.org/) for building the frontend.
+4. All required environment variables.
 
 ### Environment Variables
 
@@ -28,7 +29,7 @@ export GOOGLE_EMAIL_ADDRESS="your-email-address"
 export GOOGLE_EMAIL_APP_PASSWORD="your-app-password"
 ```
 
-### Install Dependencies
+### Backend Setup
 
 Once Poetry is installed, navigate to the project directory and install the required dependencies by running:
 
@@ -38,12 +39,42 @@ poetry install
 
 This will create a virtual environment and install all necessary packages listed in the `pyproject.toml` file.
 
-### Run the Script
+### Frontend Setup
 
-To start the script, execute the following command:
+To set up the React TypeScript frontend:
+
+1. Install the required npm packages:
+
+```bash
+cd ai-agent-email
+npm install
+```
+
+2. Build the frontend:
+
+```bash
+npm run build
+```
+
+For development, you can use the watch mode:
+
+```bash
+npm start
+```
+
+### Run the Application
+
+To start the application, execute the following command:
 
 ```bash
 poetry run python ai-agent-email/main.py
 ```
 
-This will launch the `main.py` script using Poetry's virtual environment.
+This will launch the Flask application at http://localhost:8802. Open your browser and navigate to this URL to access the AI Agent Email interface.
+
+## Using the Application
+
+1. When you first open the application, you'll see a text box and a "Talk to Agent" button.
+2. Enter your request in the text box (e.g., "Help me write an email to thank John for his help on the project").
+3. Click the "Talk to Agent" button to send your request to the AI agent.
+4. The agent will process your request and provide a response that will be displayed on the page.

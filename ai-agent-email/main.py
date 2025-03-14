@@ -1,6 +1,6 @@
 import traceback
 
-from flask import Flask, request
+from flask import Flask, request, render_template
 from iwf.iwf_api.models import (
     WorkflowStateExecuteRequest,
     WorkflowStateWaitUntilRequest,
@@ -13,12 +13,15 @@ from iwf.worker_service import (
 from ai_agent_workflow import EmailAgentWorkflow
 from iwf_config import client, worker_service
 
-flask_app = Flask(__name__)
+# Configure Flask to look for templates and static files in the correct directories
+flask_app = Flask(__name__, 
+                 template_folder='templates',
+                 static_folder='static')
 
 
 @flask_app.route("/")
 def index():
-    return "iwf workflow home"
+    return render_template("index.html")
 
 
 # http://localhost:8802/api/ai-agent/start?workflowId=test
