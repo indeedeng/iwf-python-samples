@@ -165,40 +165,6 @@ const App: React.FC = () => {
     };
   }, [workflowId, userInput, lastSavedDraft]);
 
-  // Used for manual refresh, wrapper around the shared function
-  const fetchWorkflowDetails = () => {
-    return fetchWorkflowDetailsShared({ isInitialLoad: false, source: 'manual' });
-  };
-
-  // Manual draft saving (not used in the current UI)
-  const saveDraft = async () => {
-    if (!workflowId || !userInput.trim()) return;
-    
-    // Only save if the draft has changed 
-    if (userInput !== lastSavedDraft) {
-      try {
-        setIsDraftSaving(true);
-        const encodedDraft = encodeURIComponent(userInput);
-        const res = await fetch(`/api/ai-agent/save_draft?workflowId=${workflowId}&draft=${encodedDraft}`);
-        
-        if (res.ok) {
-          // Update last saved draft
-          setLastSavedDraft(userInput);
-          // Clear any previous error messages
-          setErrorMessage('');
-        } else {
-          const errorText = await res.text();
-          setErrorMessage(`Failed to save draft: ${errorText}`);
-          console.error('Failed to save draft:', errorText);
-        }
-      } catch (error) {
-        setErrorMessage(`Error saving draft: ${error instanceof Error ? error.message : String(error)}`);
-        console.error('Error saving draft:', error);
-      } finally {
-        setIsDraftSaving(false);
-      }
-    }
-  };
 
   const startWorkflow = async () => {
     setIsLoading(true);
@@ -246,19 +212,14 @@ const App: React.FC = () => {
       setUserInput('');
       setLastSavedDraft('');
       
-      // Function to fetch workflow details after sending a request
-      const fetchWorkflowDetailsForUpdate = () => {
-        return fetchWorkflowDetailsShared({ isInitialLoad: false, source: 'after-send' });
-      };
-      
       // Fetch updated details immediately after sending a request
-      await fetchWorkflowDetailsForUpdate();
+      await fetchWorkflowDetailsShared({ isInitialLoad: false, source: 'after-send' });
       
       // Set up a series of follow-up calls to get the latest status
       // This helps to capture the state transition more quickly
-      setTimeout(() => fetchWorkflowDetailsForUpdate(), 1000);
-      setTimeout(() => fetchWorkflowDetailsForUpdate(), 3000);
-      setTimeout(() => fetchWorkflowDetailsForUpdate(), 6000);
+      setTimeout(() => fetchWorkflowDetailsShared({ isInitialLoad: false, source: 'after-send-1s' }), 1000);
+      setTimeout(() => fetchWorkflowDetailsShared({ isInitialLoad: false, source: 'after-send-3s' }), 3000);
+      setTimeout(() => fetchWorkflowDetailsShared({ isInitialLoad: false, source: 'after-send-6s' }), 6000);
     } catch (error) {
       setErrorMessage(`Error sending request: ${error instanceof Error ? error.message : String(error)}`);
       console.error('Error sending request:', error);
