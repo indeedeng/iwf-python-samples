@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [emailDetails, setEmailDetails] = useState<EmailDetails | null>(null);
   const [isDraftSaving, setIsDraftSaving] = useState<boolean>(false);
   const [lastSavedDraft, setLastSavedDraft] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     // Check for workflowId in URL parameters on component mount
@@ -62,9 +63,12 @@ const App: React.FC = () => {
             console.log('Raw response:', text);
           }
         } else {
-          console.error('Failed to fetch workflow details:', await res.text());
+          const errorText = await res.text();
+          setErrorMessage(`Failed to fetch workflow details: ${errorText}`);
+          console.error('Failed to fetch workflow details:', errorText);
         }
       } catch (error) {
+        setErrorMessage(`Error fetching workflow details: ${error instanceof Error ? error.message : String(error)}`);
         console.error('Error fetching workflow details:', error);
       }
     };
@@ -98,10 +102,15 @@ const App: React.FC = () => {
           if (res.ok) {
             // Update last saved draft
             setLastSavedDraft(userInput);
+            // Clear any previous error messages
+            setErrorMessage('');
           } else {
-            console.error('Failed to save draft:', await res.text());
+            const errorText = await res.text();
+            setErrorMessage(`Failed to save draft: ${errorText}`);
+            console.error('Failed to save draft:', errorText);
           }
         } catch (error) {
+          setErrorMessage(`Error saving draft: ${error instanceof Error ? error.message : String(error)}`);
           console.error('Error saving draft:', error);
         } finally {
           setIsDraftSaving(false);
@@ -144,9 +153,12 @@ const App: React.FC = () => {
           console.log('Raw response:', text);
         }
       } else {
-        console.error('Failed to fetch workflow details:', await res.text());
+        const errorText = await res.text();
+        setErrorMessage(`Failed to fetch workflow details: ${errorText}`);
+        console.error('Failed to fetch workflow details:', errorText);
       }
     } catch (error) {
+      setErrorMessage(`Error fetching workflow details: ${error instanceof Error ? error.message : String(error)}`);
       console.error('Error fetching workflow details:', error);
     }
   };
@@ -165,10 +177,15 @@ const App: React.FC = () => {
         if (res.ok) {
           // Update last saved draft
           setLastSavedDraft(userInput);
+          // Clear any previous error messages
+          setErrorMessage('');
         } else {
-          console.error('Failed to save draft:', await res.text());
+          const errorText = await res.text();
+          setErrorMessage(`Failed to save draft: ${errorText}`);
+          console.error('Failed to save draft:', errorText);
         }
       } catch (error) {
+        setErrorMessage(`Error saving draft: ${error instanceof Error ? error.message : String(error)}`);
         console.error('Error saving draft:', error);
       } finally {
         setIsDraftSaving(false);
@@ -189,9 +206,13 @@ const App: React.FC = () => {
         // Redirect to the same page but with the workflowId as a parameter
         window.location.href = `${window.location.pathname}?workflowId=${newWorkflowId}`;
       } else {
-        console.error('Failed to start workflow:', await res.text());
+        const errorText = await res.text();
+        setErrorMessage(`Failed to start workflow: ${errorText}`);
+        console.error('Failed to start workflow:', errorText);
+        setIsLoading(false);
       }
     } catch (error) {
+      setErrorMessage(`Error starting workflow: ${error instanceof Error ? error.message : String(error)}`);
       console.error('Error starting workflow:', error);
       setIsLoading(false);
     }
@@ -205,8 +226,13 @@ const App: React.FC = () => {
       // Send the request
       const encodedRequest = encodeURIComponent(userInput);
       const res = await fetch(`/api/ai-agent/request?workflowId=${workflowId}&request=${encodedRequest}`);
-      if (!res.ok) {
-        console.error('Failed to send request:', await res.text());
+      if (res.ok) {
+        // Clear any previous error messages on success
+        setErrorMessage('');
+      } else {
+        const errorText = await res.text();
+        setErrorMessage(`Failed to send request: ${errorText}`);
+        console.error('Failed to send request:', errorText);
       }
       
       // Clear input and reset last saved draft after sending
@@ -222,11 +248,19 @@ const App: React.FC = () => {
             try {
               const data = JSON.parse(text);
               setEmailDetails(data);
+              // Clear error on successful fetch
+              setErrorMessage('');
             } catch (parseError) {
+              setErrorMessage(`Error parsing JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
               console.error('Error parsing JSON response:', parseError);
             }
+          } else {
+            const errorText = await res.text();
+            setErrorMessage(`Failed to fetch workflow details: ${errorText}`);
+            console.error('Failed to fetch workflow details:', errorText);
           }
         } catch (error) {
+          setErrorMessage(`Error fetching workflow details: ${error instanceof Error ? error.message : String(error)}`);
           console.error('Error fetching workflow details:', error);
         }
       };
@@ -240,6 +274,7 @@ const App: React.FC = () => {
       setTimeout(() => fetchWorkflowDetailsForUpdate(), 3000);
       setTimeout(() => fetchWorkflowDetailsForUpdate(), 6000);
     } catch (error) {
+      setErrorMessage(`Error sending request: ${error instanceof Error ? error.message : String(error)}`);
       console.error('Error sending request:', error);
     } finally {
       setIsLoading(false);
@@ -278,6 +313,20 @@ const App: React.FC = () => {
             Start
           </button>
           {isLoading && <p style={{ marginTop: '20px' }}>Starting workflow...</p>}
+          {errorMessage && (
+            <div style={{
+              backgroundColor: '#ffebee',
+              color: '#d32f2f',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              fontSize: '14px',
+              marginTop: '15px',
+              textAlign: 'center',
+              maxWidth: '400px'
+            }}>
+              {errorMessage}
+            </div>
+          )}
         </div>
       ) : (
         // Show the chat interface and email details if workflowId is present
@@ -340,33 +389,55 @@ const App: React.FC = () => {
               
               <div style={{ 
                 display: 'flex',
-                justifyContent: 'center',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '15px',
+                gap: '10px',
                 marginTop: '15px'
               }}>
-                {emailDetails && (
-                  <span style={{ 
-                    padding: '5px 15px', 
-                    borderRadius: '12px', 
-                    fontSize: '14px', 
-                    fontWeight: 'bold',
-                    backgroundColor: emailDetails.status === 'waiting' ? '#4caf50' : '#ff9800',
-                    color: 'white',
-                    display: 'inline-block'
-                  }}>
-                    Status: {emailDetails.status}
-                  </span>
-                )}
+                <div style={{ 
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '15px'
+                }}>
+                  {emailDetails && (
+                    <span style={{ 
+                      padding: '5px 15px', 
+                      borderRadius: '12px', 
+                      fontSize: '14px', 
+                      fontWeight: 'bold',
+                      backgroundColor: emailDetails.status === 'waiting' ? '#4caf50' : '#ff9800',
+                      color: 'white',
+                      display: 'inline-block'
+                    }}>
+                      Status: {emailDetails.status}
+                    </span>
+                  )}
+                  
+                  {isDraftSaving && (
+                    <span style={{ 
+                      fontSize: '12px',
+                      color: '#666',
+                      fontStyle: 'italic'
+                    }}>
+                      Saving draft...
+                    </span>
+                  )}
+                </div>
                 
-                {isDraftSaving && (
-                  <span style={{ 
-                    fontSize: '12px',
-                    color: '#666',
-                    fontStyle: 'italic'
+                {errorMessage && (
+                  <div style={{
+                    backgroundColor: '#ffebee',
+                    color: '#d32f2f',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    width: '100%',
+                    textAlign: 'center',
+                    marginTop: '5px'
                   }}>
-                    Saving draft...
-                  </span>
+                    {errorMessage}
+                  </div>
                 )}
               </div>
               
