@@ -35,9 +35,15 @@ provide a durable, scalable email assistant.
   dependent on a single machine.
 - **Stateful API Integration**: Seamless integration with OpenAI's GPT models with context retention
 
-### Demo Video
+### Demo Videos
+
+#### AI Agent Email Demo(happy case)
 
 [![AI Agent Email Demo](https://img.youtube.com/vi/2dvIetECHWg/0.jpg)](https://www.youtube.com/watch?v=2dvIetECHWg "AI Agent Email Demo")
+
+#### iWF Framework Overview(cancel a scheduled email)
+
+[![iWF Framework Overview](https://img.youtube.com/vi/EEHSLYkbREU/0.jpg)](https://www.youtube.com/watch?v=EEHSLYkbREU "iWF Framework Overview")
 
 ## How to Run
 
