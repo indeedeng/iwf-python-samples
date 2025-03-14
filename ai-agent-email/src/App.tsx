@@ -24,7 +24,6 @@ interface EmailDetails {
 const App: React.FC = () => {
   const [workflowId, setWorkflowId] = useState<string>('');
   const [userInput, setUserInput] = useState<string>('');
-  const [response, setResponse] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [emailDetails, setEmailDetails] = useState<EmailDetails | null>(null);
 
@@ -102,8 +101,9 @@ const App: React.FC = () => {
     try {      
       const encodedRequest = encodeURIComponent(userInput);
       const res = await fetch(`/api/ai-agent/request?workflowId=${workflowId}&request=${encodedRequest}`);
-      const data = await res.text();
-      setResponse(data);
+      if (!res.ok) {
+        console.error('Failed to send request:', await res.text());
+      }
       setUserInput(''); // Clear input after sending
       
       // Fetch updated details after sending a request
@@ -225,6 +225,30 @@ const App: React.FC = () => {
                   </span>
                 </div>
               )}
+              
+              {/* Add "Start New Email" button when email has been sent */}
+              {emailDetails && emailDetails.status === 'sent' && (
+                <div style={{ 
+                  textAlign: 'center',
+                  marginTop: '30px'
+                }}>
+                  <button
+                    onClick={() => window.location.href = window.location.pathname}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#4285f4',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Start New Email
+                  </button>
+                </div>
+              )}
             </div>
             
             {isLoading && 
@@ -236,22 +260,6 @@ const App: React.FC = () => {
                 Processing your request...
               </div>
             }
-            
-            {response && (
-              <div style={{ marginTop: '30px' }}>
-                <h2>Response:</h2>
-                <div style={{ 
-                  border: '1px solid #ddd', 
-                  padding: '20px',
-                  borderRadius: '4px',
-                  backgroundColor: '#f9f9f9',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                  whiteSpace: 'pre-wrap'
-                }}>
-                  {response}
-                </div>
-              </div>
-            )}
           </div>
           
           {/* Right side - Email details */}
