@@ -46,7 +46,10 @@ def ai_agent_request():
 def ai_agent_describe():
     wf_id = request.args["workflowId"]
     wf_details = client.invoke_rpc(wf_id, EmailAgentWorkflow.describe)
-    return wf_details
+    print(f"Workflow details for {wf_id}: {wf_details}")
+    # Return as JSON
+    from flask import jsonify
+    return jsonify(wf_details)
 
 
 # http://localhost:8802/api/ai-agent/save_draft?workflowId=test&draft="this is a draft"
