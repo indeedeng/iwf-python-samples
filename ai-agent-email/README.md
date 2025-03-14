@@ -35,6 +35,10 @@ provide a durable, scalable email assistant.
   dependent on a single machine.
 - **Stateful API Integration**: Seamless integration with OpenAI's GPT models with context retention
 
+### Demo Video
+
+[![AI Agent Email Demo](https://img.youtube.com/vi/2dvIetECHWg/0.jpg)](https://www.youtube.com/watch?v=2dvIetECHWg "AI Agent Email Demo")
+
 ## How to Run
 
 To run the `main.py` script located in the `ai-agent-email` directory, follow the steps below:
