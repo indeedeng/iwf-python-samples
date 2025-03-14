@@ -290,10 +290,14 @@ def do_process_user_request(req: str, previous_response_id: str | None):
         The email subject or body may need to be translated if user requests to.
         The email subject and body must be complete, do not leave any place holders like [Your Name]. 
         The email's recipient should be in a valid email format, other wise, return empty string for that field.
-        The sending time must be in unix timestamp in seconds, for example, the current timestamp is {current_timestamp}.
-        User may provide an relative time based on today/now, you should calculate the timestamp based on offset. For example, tomorrow means current timestamp plus 86400.
-        For other examples, X seconds/minutes/hours later means the current timestamp plus the time in seconds later.
-        MAKE SURE the sending time is greater than current timestamp, if NOT, then it's wrong, you should always use current timestamp as the base. 
+        The sending time must be in unix timestamp in seconds. 
+        The current timestamp is {current_timestamp}.
+        User may use relative time description based on today/now, you should calculate the timestamp based on the current timestamp {current_timestamp}. 
+        For example, tomorrow means current timestamp plus 86400, 
+        X seconds later means {current_timestamp} + X, 
+        X minutes later means {current_timestamp} + X*60, 
+        X hours later means {current_timestamp} + X * 3600.
+        MAKE SURE the sending time is ALWAYS greater than the above provided current timestamp, if NOT, then it's wrong, you should always use current timestamp as the base. 
         User may also ask to cancel the emailing operation, then return true for cancel_operation field.
         All the fields are optional.
         If there is no recipient, return empty string for the field.
