@@ -427,7 +427,7 @@ const App: React.FC = () => {
               </div>
               
               {/* Add "Start New Email" button when email has been sent */}
-              {emailDetails && emailDetails.status === 'sent' && (
+              {emailDetails && (emailDetails.status === 'sent' || emailDetails.status === 'failed' || emailDetails.status === 'canceled') && (
                 <div style={{ 
                   textAlign: 'center',
                   marginTop: '30px'
