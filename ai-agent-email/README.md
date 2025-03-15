@@ -15,6 +15,15 @@ The AI Agent Email is a feature-rich application that leverages AI to streamline
 and management. It combines a React frontend with a Flask backend powered by iWF (Indeed Workflow Framework) to
 provide a durable, scalable email assistant.
 
+### Why iWF?
+
+iWF (Indeed Workflow Framework) was chosen for this application due to its ability to provide extreme **simplicity** in
+software design and implementation. By leveraging iWF, developers can focus on building business logic without worrying
+about the complexities of distributed systems, state management, or scalability.
+
+For more details on building reliable AI agents with iWF on Temporal, check out the following
+article: [Build Reliable AI Agents with iWF on Temporal](TODO link)
+
 ### Functional Features
 
 - **AI-Powered Email Composition**: Generate professionally written emails based on simple user requests and inputs
@@ -26,14 +35,14 @@ provide a durable, scalable email assistant.
 
 ### Technical Features
 
-- **Durable Drafting System**: Preserves user input across page refreshes and browser sessions
 - **Workflow Checkpointing**: Uses iWF to maintain workflow state, enabling resumption from previous points after any
   instance restart
-- **Scalable Architecture**: Capable of handling billions of concurrent workflows
+- **Scalable Architecture**: Capable of handling **billions** of concurrent workflows
 - **Durable Timers**: Schedule-based operations use server-side durable timers that persist across system restarts
 - **Server-Side Backoff Retry**: Built-in retry mechanism orchestrated on the server side as distributed system, not
   dependent on a single machine.
 - **Stateful API Integration**: Seamless integration with OpenAI's GPT models with context retention
+- **Durable Drafting System**: Preserves user input across page refreshes and browser sessions
 
 ### Demo Videos
 
@@ -47,13 +56,15 @@ provide a durable, scalable email assistant.
 
 ## How to Run
 
-To run the `main.py` script located in the `ai-agent-email` directory, follow the steps below:
-
 ### Prerequisites
 
 Make sure you have the following installed and set up:
 
-1. [Python 3.13.2](https://www.python.org/downloads/)
+1. Run iWF server
+    * The simplest way is to run
+      `docker pull iworkflowio/iwf-server-lite:latest && docker run -p 8801:8801 -p 7233:7233 -p 8233:8233 -e AUTO_FIX_WORKER_URL=host.docker.internal --add-host host.docker.internal:host-gateway -it iworkflowio/iwf-server-lite:latest`
+    * Or check out [iWF documentation](https://github.com/indeedeng/iwf?tab=readme-ov-file#how-to-use)
+2. [Python 3.13.2](https://www.python.org/downloads/)
 2. [Poetry](https://python-poetry.org/docs/) for dependency management and virtual environments.
 3. [Node.js and npm](https://nodejs.org/) for building the frontend.
 4. All required environment variables.
