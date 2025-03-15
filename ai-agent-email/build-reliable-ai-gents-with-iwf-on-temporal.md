@@ -228,8 +228,6 @@ resource explains the core ideas behind iWF's approach to workflow definition an
 
 ```python
 @rpc()
-
-
 def send_request(self, input: str, persistence: Persistence, communication: Communication) -> bool:
     status = persistence.get_data_attribute(DA_STATUS)
     if status == STATUS_WAITING:
@@ -269,7 +267,49 @@ def save_draft(self, draft: str, persistence: Persistence):
     persistence.set_data_attribute(DA_CURRENT_REQUEST_DRAFT, draft)
 ```
 
+[Remote Procedure Calls (RPCs)](https://github.com/indeedeng/iwf/wiki/RPC)
+are a critical component of the iWF framework that enable external systems to
+interact with running workflow executions.
+In our AI email agent, we use RPCs to create a bridge between the Flask web server
+and the workflow executions running in the iWF/Temporal backend.
+
+#### Our Email Agent RPCs
+
+The AI email agent implements three critical RPCs:
+
+1. **`send_request`**: Processes new user queries and requests to the AI agent
+    - Takes the user's text input as a parameter
+    - Checks if the workflow is in the "waiting" state before proceeding
+    - Clears any existing draft text
+    - Publishes the user input to the internal channel for the AgentState or ScheduleState to process
+    - Updates the workflow status to "processing"
+    - Returns a boolean indicating success or failure
+
+2. **`describe`**: Provides a complete snapshot of the current workflow state
+    - Retrieves all relevant data attributes from the persistence layer
+    - Returns email details (recipient, subject, body), status, and other metadata
+    - This RPC enables the frontend to display up-to-date information about the email
+
+3. **`save_draft`**: Persists the user's draft text
+    - Takes the draft text as a parameter
+    - Saves it to the persistence layer for durability
+    - Enables auto-save functionality in the UI
+
+The RPCs in our implementation serve as the primary communication points between the frontend UI and the backend
+workflow,
+ensuring that user interactions are properly captured, processed, and reflected in the workflow state.
+This approach makes our AI agent both interactive and reliable, handling real-time user inputs
+while maintaining workflow durability.
+
 ### Workflow States
+
+#### InitState
+
+#### AgentState
+
+#### ScheduleState
+
+#### SendingState
 
 ## Comparison with some alternatives
 
