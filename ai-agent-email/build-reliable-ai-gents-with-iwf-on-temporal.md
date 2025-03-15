@@ -15,9 +15,11 @@ The demo showcases an AI-powered email agent capable of composing, translating, 
 drafting and cancellation features. It utilizes iWF on Temporal to ensure high scalability, reliability, and seamless
 integration with third-party APIs like OpenAI and Gmail for durable and stateful workflows.
 
-[![AI Agent Email Demo](https://img.youtube.com/vi/2dvIetECHWg/0.jpg)](https://www.youtube.com/watch?v=2dvIetECHWg "AI Agent Email Demo")
+* Happy case
+  [![AI Agent Email Demo](https://img.youtube.com/vi/2dvIetECHWg/0.jpg)](https://www.youtube.com/watch?v=2dvIetECHWg "AI Agent Email Demo")
 
-[![iWF Framework Overview](https://img.youtube.com/vi/EEHSLYkbREU/0.jpg)](https://www.youtube.com/watch?v=EEHSLYkbREU "AI Agent Email Demo with Cancel")
+* Scheduled and then cancel
+  [![iWF Framework Overview](https://img.youtube.com/vi/EEHSLYkbREU/0.jpg)](https://www.youtube.com/watch?v=EEHSLYkbREU "AI Agent Email Demo with Cancel")
 
 ### Functional requirements
 
