@@ -577,30 +577,18 @@ workflow and OpenAI's language model. Here's how it works:
 3. **Structured Output Format**: The implementation uses OpenAI's structured response capabilities (
    `text=Converter.get_response_format(AgentOutputSchema(AgentResponse))`) to ensure the AI generates responses in a
    consistent JSON format that maps directly to the `AgentResponse` model.
-   (Note that this is from OpenAI's agents SDK, which also supports Response API already, but doesn't allow passing a
-   responseID yet)
+   The AgentOutputSchema and Converter are from OpenAI's agents SDK, which also supports Response API already,
+   but doesn't allow passing a responseID yet.
 
-4. **Detailed Instructions**: The prompt provides comprehensive guidance to the model, covering email composition,
-   translation, time calculation for scheduling, and cancellation handling.
-
-This architecture provides several key benefits:
-
-1. **Distributed Conversation State**: By persisting the response ID in iWF's storage, any server instance running the
-   workflow can access the conversation history, even if the original instance fails or the workflow is moved to another
-   machine.
-
-2. **Resilient AI Interactions**: If the workflow is paused, migrated to another server, or resumed after a system
-   failure, it can seamlessly continue the conversation with OpenAI without losing context.
-
-3. **System Scalability**: This approach enables the system to scale to millions of concurrent workflows, each
-   maintaining its own conversation state with OpenAI.
-
-4. **Simplified Conversation Management**: The code doesn't need to track the full conversation history—it only needs to
-   store a single response ID, significantly reducing the storage requirements and simplifying the implementation.
-
-The combination of iWF's workflow state persistence and OpenAI's conversation state persistence creates a robust
-foundation for stateful AI agents that can maintain context across system boundaries and withstand infrastructure
-failures.
+4. **Detailed Instructions with Real-Time Context**: The prompt provides comprehensive guidance to the model, covering
+   email composition,
+   translation, and cancellation handling. Crucially, it injects the current timestamp (
+   `current_timestamp = int(time.time())`)
+   multiple times throughout the prompt to ensure accurate time calculations, overriding the model's tendency to use
+   outdated
+   timestamps from its training data. This technique is essential for scheduling functionality, as it enables precise
+   relative
+   time expressions like "tomorrow" or "in 2 hours" to be correctly converted to absolute Unix timestamps.
 
 ## Some Key Benefits of the Architecture
 
