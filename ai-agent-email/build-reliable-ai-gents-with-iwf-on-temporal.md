@@ -387,15 +387,63 @@ itself to await further user interaction.
 
 ```python
     def get_state_options(self) -> WorkflowStateOptions:
-        return WorkflowStateOptions(
-            # customize the timeout to let OpenAI run longer
-            execute_api_timeout_seconds=90
-        )
+    return WorkflowStateOptions(
+        # customize the timeout to let OpenAI run longer
+        execute_api_timeout_seconds=90
+    )
 ```
 
-The `get_state_options` method configures [special execution parameters](https://github.com/indeedeng/iwf/wiki/WorkflowOptions) for the AgentState, extending the default API timeout to 90 seconds to accommodate potential latency when calling OpenAI's API. This customization is crucial for AI-powered workflows, where external API calls may take longer than standard timeouts would allow, preventing premature failure of the workflow due to timeout constraints.
+The `get_state_options` method
+configures [special execution parameters](https://github.com/indeedeng/iwf/wiki/WorkflowOptions)
+for the AgentState, extending the default API timeout to 90 seconds to accommodate potential latency when calling
+OpenAI's API.
+
+This customization is crucial for AI-powered workflows, where external API calls may take longer than standard timeouts
+would allow, preventing premature failure of the workflow due to timeout constraints.
 
 #### ScheduleState
+
+```python
+class SendingState(WorkflowState[None]):
+    def execute(
+            self,
+            ctx: WorkflowContext,
+            ignored: None,
+            command_results: CommandResults,
+            persistence: Persistence,
+            communication: Communication,
+    ) -> StateDecision:
+        google_email = os.environ.get('GOOGLE_EMAIL_ADDRESS')
+        google_email_app_password = os.environ.get('GOOGLE_EMAIL_APP_PASSWORD')
+
+        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        smtp_server.ehlo()
+        smtp_server.login(google_email, google_email_app_password)
+
+        sent_to = persistence.get_data_attribute(DA_EMAIL_RECIPIENT)
+        subject = persistence.get_data_attribute(DA_EMAIL_SUBJECT)
+        body = persistence.get_data_attribute(DA_EMAIL_BODY)
+
+        message = 'Subject: {}\n\n{}'.format(subject, body)
+
+        smtp_server.sendmail(google_email, sent_to, message)
+        smtp_server.quit()
+
+        persistence.set_data_attribute(DA_STATUS, STATUS_SENT)
+        return StateDecision.graceful_complete_workflow()
+```
+
+```python
+    def get_state_options(self) -> WorkflowStateOptions:
+    return WorkflowStateOptions(
+        # customize the backoff retry policy for sending email API
+        # by default it will retry forever
+        # in case of wrong API key, we want to stop it after a minute
+        execute_api_retry_policy=RetryPolicy(
+            maximum_attempts_duration_seconds=60,
+        )
+    )
+```
 
 #### SendingState
 
