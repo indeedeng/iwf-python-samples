@@ -254,12 +254,6 @@ class ScheduleState(WorkflowState[None]):
             # timer fired
             return StateDecision.single_next_state(SendingState)
 
-    def get_state_options(self) -> WorkflowStateOptions:
-        return WorkflowStateOptions(
-            # customize the timeout to let OpenAI run longer
-            execute_api_timeout_seconds=90
-        )
-
 
 class AgentResponse(BaseModel):
     email_recipient: str | None

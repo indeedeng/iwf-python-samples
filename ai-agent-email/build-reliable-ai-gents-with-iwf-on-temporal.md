@@ -387,6 +387,8 @@ itself to await further user interaction.
 
 ```python
     def get_state_options(self) -> WorkflowStateOptions:
+
+
     return WorkflowStateOptions(
         # customize the timeout to let OpenAI run longer
         execute_api_timeout_seconds=90
@@ -402,6 +404,47 @@ This customization is crucial for AI-powered workflows, where external API calls
 would allow, preventing premature failure of the workflow due to timeout constraints.
 
 #### ScheduleState
+
+```python
+class ScheduleState(WorkflowState[None]):
+    def wait_until(self, ctx: WorkflowContext, ignored: None, persistence: Persistence,
+                   communication: Communication) -> CommandRequest:
+        persistence.set_data_attribute(DA_STATUS, STATUS_WAITING)
+        send_time = persistence.get_data_attribute(DA_SCHEDULED_TIME_SECONDS)
+        return CommandRequest.for_any_command_completed(
+            # timer in iWF is durable, meaning that it will not be lost for any instance restarts
+            TimerCommand.by_seconds(get_timer_duration(send_time)),
+            # user can interrupt it anytime when waiting
+            InternalChannelCommand.by_name(CH_USER_INPUT)
+        )
+
+    def execute(self, ctx: WorkflowContext, ignored: None, command_results: CommandResults, persistence: Persistence,
+                communication: Communication) -> StateDecision:
+        if command_results.internal_channel_commands[0].status == ChannelRequestStatus.RECEIVED:
+            # Go to agent state to process user input again
+            # put the message back to the channel so that we can reuse the AgentState to process it.
+            # Alternatively, we can process it in this state, but the code will be a little more complex.
+            communication.publish_to_internal_channel(CH_USER_INPUT, command_results.internal_channel_commands[0].value)
+            return StateDecision.single_next_state(AgentState)
+        else:
+            # timer fired
+            return StateDecision.single_next_state(SendingState)
+```
+
+The ScheduleState exemplifies iWF's powerful durable timer capabilities and interruptibility features
+for long-running operations. This state sets up a timer to wait until the scheduled send time
+for the email while simultaneously listening for user interruptions (like cancellations or revisions).
+
+When either the timer fires or a user input is received, the `execute` method determines which path to take:
+proceeding to send the email if the timer completed, or returning to the AgentState to process a new user
+request if an interruption occurred.
+
+The durable nature of the timer ensures that even if the system restarts or experiences failures
+during the scheduled waiting period (which could be hours or days), the timer will resume correctly
+when the system recovers. This allows the email agent to reliably schedule emails far in advance
+without worrying about system reliability issues.
+
+#### SendingState
 
 ```python
 class SendingState(WorkflowState[None]):
@@ -435,6 +478,8 @@ class SendingState(WorkflowState[None]):
 
 ```python
     def get_state_options(self) -> WorkflowStateOptions:
+
+
     return WorkflowStateOptions(
         # customize the backoff retry policy for sending email API
         # by default it will retry forever
@@ -444,8 +489,6 @@ class SendingState(WorkflowState[None]):
         )
     )
 ```
-
-#### SendingState
 
 #### LLM Prompt and using OpenAI Response API
 
