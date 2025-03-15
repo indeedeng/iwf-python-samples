@@ -626,6 +626,8 @@ Beyond this simplicity, the architecture provides exceptional power and reliabil
     - Skip timers for testing or operational interventions
     - Advanced workflow search capabilities across multiple dimensions
     - Comprehensive monitoring and observability
+    - Intuitive Web UI for debugging workflows in real-time, watching execution progress, and inspecting detailed error
+      stack traces
 
 4. **Simplified Versioning**: iWF's architecture eliminates the notorious "Non-Deterministic errors" common in
    replay-based workflow frameworks, making versioning and updates remarkably straightforward. Developers can deploy new
@@ -689,3 +691,36 @@ enhance its suitability for AI agent development:
 
 These additional capabilities further cement iWF on Temporal as the ideal platform for building AI agents
 that need to be reliable, scalable, and maintainable in production environments.
+
+Beyond these, there are even more powerful features that aren't demonstrated in this example but can be invaluable for
+complex use cases:
+
+1. **State API Failure Handling/Recovery After Retries**: While default behavior fails the workflow when state APIs
+   exhaust retry attempts, iWF provides
+   sophisticated [failure handling mechanisms](https://github.com/indeedeng/iwf/wiki/WorkflowStateOptions#state-api-failure-handlingrecovery-after-retries-are-exhausted)
+   that allow workflows to:
+    - Implement SAGA compensation patterns after retries are exhausted
+    - Execute clean-up logic to maintain system consistency
+    - Take alternative paths when operations persistently fail
+    - Preserve partial progress despite subsystem failures
+
+2. **Wait For State Completion**:
+   The [wait-for-state-completion](https://github.com/indeedeng/iwf/wiki/How-to-wait-for-a-workflow-state-to-complete)
+   feature enables frontend clients to:
+    - Wait synchronously for specific background actions to complete
+    - Build complex interaction logic with real-time feedback
+    - Implement progressive user experiences with background processing
+    - Coordinate between user actions and system state changes
+
+3. **RPC Locking**: iWF provides
+   sophisticated [RPC locking mechanisms](https://github.com/indeedeng/iwf/wiki/RPC-locking:-What-does-the-atomicity-of-RPC-really-mean%3F)
+   to prevent race conditions:
+    - Ensures atomicity of operations across concurrent RPCs and WorkflowStates
+    - Prevents data corruption when multiple clients interact with the same workflow
+    - Provides configurable locking strategies for different use cases
+    - Maintains consistency without requiring developers to implement complex synchronization code
+    - Critical for AI agents where multiple users or systems might be interacting with the same workflow
+
+These advanced capabilities allow developers to tackle even the most complex AI agent scenarios with robust error
+handling,
+sophisticated user interaction patterns, and graceful degradation strategies.
