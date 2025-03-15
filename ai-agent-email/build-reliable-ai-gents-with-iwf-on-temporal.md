@@ -85,7 +85,110 @@ third-party APIs to provide reliable AI-powered workflows with high scalability 
 
 <img width="901" alt="Workflow Overview" src="https://github.com/user-attachments/assets/06d8d95b-9242-461b-8694-2a4a6053ae35" />
 
+The [AI Agent Email workflow](https://github.com/indeedeng/iwf-python-samples/blob/ai-agent/ai-agent-email/ai_agent_workflow.py)
+is implemented using iWF (Indeed Workflow Framework), providing a robust state machine for
+handling the entire email creation, scheduling, and delivery process. Let's break down how the workflow operates:
+
+### Workflow States
+
+The [workflow](https://github.com/indeedeng/iwf-python-samples/blob/ai-agent/ai-agent-email/ai_agent_workflow.py)
+consists of four main states, each handling a specific part of the email lifecycle:
+
+1. **InitState**: The entry point that initializes the workflow and verifies required credentials.
+    - Sets initial status as "initialized"
+    - Validates Google email credentials
+    - Transitions to AgentState upon successful initialization
+
+2. **AgentState**: The core interactive state where the AI agent processes user requests.
+    - Sets status to "waiting" when ready for user input
+    - Uses OpenAI's GPT model to handle user requests
+    - Processes various actions like email drafting, translation, and scheduling
+    - Updates email details based on agent responses
+    - Can transition back to itself for further refinement or to ScheduleState when ready to schedule
+
+3. **ScheduleState**: Handles email scheduling with durable timers.
+    - Sets up a durable timer based on the scheduled send time
+    - Allows users to interrupt with new inputs (cancellations or revisions)
+    - Transitions to SendingState when the timer fires or back to AgentState if interrupted
+
+4. **SendingState**: Responsible for the actual email delivery.
+    - Connects to Gmail SMTP server
+    - Sends the composed email
+    - Marks the workflow as completed
+
+### Key Workflow Components
+
+1. **Persistence Schema**: Maintains the workflow state with durable data attributes:
+    - Email details (recipient, subject, body)
+    - Workflow status (initialized, waiting, processing, sent, failed, canceled)
+    - Current user request and draft
+    - Scheduled sending time
+
+2. **Communication Schema**: Defines the channels for interaction:
+    - Internal channel for user inputs that can interrupt the workflow
+
+3. **RPC Methods**: Exposes API endpoints for interacting with the workflow:
+    - `send_request(...)`: Processes new user requests
+    - `describe()`: Returns the current state of the workflow
+    - `save_draft(...)`: Persists the user's draft
+
+4. **Agent Processing**: The `process_user_request()` function:
+    - Maintains conversation context with previous response IDs
+    - Interprets user requests and extracts email details
+    - Handles special actions like cancellations
+    - Returns structured data for workflow processing
+
+### Reliability Features
+
+1. **Error Handling**: Custom retry policies for external API interactions
+    - Maximum attempt durations to prevent infinite retries
+
+2. **Durable Timers**: Email scheduling that persists across restarts
+    - The `get_timer_duration()` function calculates time differences safely
+
+3. **State Management**: Clear state transitions with proper persistence
+    - All state changes are recorded in the durable workflow storage
+
+4. **Interruption Handling**: Users can interrupt scheduled emails
+    - The ScheduleState monitors both timer completion and user interruptions
+
 ## Dive deep into implementation
+
+Now let's start dive deep into the code.
+
+### Workflow definition
+
+```python
+class EmailAgentWorkflow(ObjectWorkflow):
+    def get_persistence_schema(self) -> PersistenceSchema:
+        return PersistenceSchema.create(
+            PersistenceField.data_attribute_def(DA_STATUS, str),
+            PersistenceField.data_attribute_def(DA_CURRENT_REQUEST, str),
+            PersistenceField.data_attribute_def(DA_CURRENT_REQUEST_DRAFT, str),
+            PersistenceField.data_attribute_def(DA_PREVIOUS_RESPONSE_ID, str),
+            PersistenceField.data_attribute_def(DA_EMAIL_RECIPIENT, str),
+            PersistenceField.data_attribute_def(DA_EMAIL_SUBJECT, str),
+            PersistenceField.data_attribute_def(DA_EMAIL_BODY, str),
+            PersistenceField.data_attribute_def(DA_SCHEDULED_TIME_SECONDS, int)
+        )
+
+    def get_communication_schema(self) -> CommunicationSchema:
+        return CommunicationSchema.create(
+            CommunicationMethod.internal_channel_def(CH_USER_INPUT, str),
+        )
+
+    def get_workflow_states(self) -> StateSchema:
+        return StateSchema.with_starting_state(
+            InitState(),
+            AgentState(),
+            ScheduleState(),
+            SendingState()
+        )
+```
+
+### Workflow RPCs
+
+### Workflow States
 
 ## Comparison with some alternatives
 
