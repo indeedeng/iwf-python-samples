@@ -204,6 +204,8 @@ execution:
   information
 - **Type Safety**: Each attribute is strongly typed (string, integer) to ensure data consistency
 
+See more in iWF [persistence](https://github.com/indeedeng/iwf/wiki/Persistence) documentation.
+
 #### 2. Communication Schema
 
 The `get_communication_schema()` method defines
@@ -386,9 +388,7 @@ it either transitions to the ScheduleState when ready to schedule an email or cy
 itself to await further user interaction.
 
 ```python
-    def get_state_options(self) -> WorkflowStateOptions:
-
-
+def get_state_options(self) -> WorkflowStateOptions:
     return WorkflowStateOptions(
         # customize the timeout to let OpenAI run longer
         execute_api_timeout_seconds=90
@@ -396,7 +396,7 @@ itself to await further user interaction.
 ```
 
 The `get_state_options` method
-configures [special execution parameters](https://github.com/indeedeng/iwf/wiki/WorkflowOptions)
+configures [special execution parameters](https://github.com/indeedeng/iwf/wiki/WorkflowStateOptions#workflowstate-waituntilexecute-api-timeout-and-retry-policy)
 for the AgentState, extending the default API timeout to 90 seconds to accommodate potential latency when calling
 OpenAI's API.
 
@@ -476,10 +476,15 @@ class SendingState(WorkflowState[None]):
         return StateDecision.graceful_complete_workflow()
 ```
 
+The SendingState represents the final step in the email workflow, handling the actual delivery of the
+composed email through SMTP integration with Gmail.
+This state demonstrates iWF's robust error handling capabilities through its custom retry policy configuration.
+When executing, it connects to Gmail's SMTP server, authenticates using the previously validated credentials,
+constructs the email message with the subject and body from persisted workflow data,
+and sends it to the recipient.
+
 ```python
-    def get_state_options(self) -> WorkflowStateOptions:
-
-
+def get_state_options(self) -> WorkflowStateOptions:
     return WorkflowStateOptions(
         # customize the backoff retry policy for sending email API
         # by default it will retry forever
@@ -490,7 +495,112 @@ class SendingState(WorkflowState[None]):
     )
 ```
 
-#### LLM Prompt and using OpenAI Response API
+What makes this state particularly reliable is its error handling approach. The `get_state_options` method
+applies
+a [custom retry policy](https://github.com/indeedeng/iwf/wiki/WorkflowStateOptions#workflowstate-waituntilexecute-api-timeout-and-retry-policy)
+that limits retry attempts to 60 seconds, preventing indefinite retries
+in case of permanent failures like invalid credentials. This balance between persistence
+(automatically retrying transient errors) and pragmatism (giving up after a reasonable time for permanent errors)
+is essential for production systems that interact with external services.
+
+After successful email delivery, the workflow's status is updated to "sent" and the workflow gracefully completes,
+having fulfilled its purpose of composing, scheduling, and delivering an email based on the user's requirements.
+
+#### LLM Prompt and OpenAI Response API
+
+```python
+def process_user_request(req: str, persistence: Persistence) -> AgentResponse:
+    response = do_process_user_request(req, persistence.get_data_attribute(DA_PREVIOUS_RESPONSE_ID))
+    if isinstance(response.id, str):
+        persistence.set_data_attribute(DA_PREVIOUS_RESPONSE_ID, response.id)
+
+    resp = response.output[0].content[0].text
+    return AgentResponse.model_validate_json(resp)
+
+
+def do_process_user_request(req: str, previous_response_id: str | None):
+    client = OpenAI()
+
+    current_timestamp = int(time.time())
+    response = client.responses.create(
+        model="gpt-4o",
+        instructions=f"""
+        Help prepare an email to be sent. Based on user requests, return email's subject, body, recipient 
+        , sending time and/or cancel_operation, if any of them available. 
+        The email subject or body may need to be translated if user requests to.
+        The email subject and body must be complete, do not leave any place holders like [Your Name]. 
+        The email's recipient should be in a valid email format, other wise, return empty string for that field.
+        The sending time must be in unix timestamp in seconds. 
+        The current timestamp is {current_timestamp}.
+        User may use relative time description based on today/now, you should calculate the timestamp based on the current timestamp {current_timestamp}. 
+        For example, tomorrow means current timestamp plus 86400, 
+        X seconds later means {current_timestamp} + X, 
+        X minutes later means {current_timestamp} + X*60, 
+        X hours later means {current_timestamp} + X * 3600.
+        MAKE SURE the sending time is ALWAYS greater than the above provided current timestamp, if NOT, then it's wrong, you should always use current timestamp as the base. 
+        User may also ask to cancel the emailing operation, then return true for cancel_operation field.
+        All the fields are optional.
+        If there is no recipient, return empty string for the field.
+        If there is no body, return empty string for the field.
+        If there is no subject, return empty string for the field.
+        If there is no sending time, return 0 for the field.
+        If not asking to cancel emailing, return false for the field.
+        """,
+        input=req,
+        text=Converter.get_response_format(
+            AgentOutputSchema(AgentResponse)
+        ),
+        previous_response_id=previous_response_id
+    )
+    from pprint import pprint
+    pprint(response)
+    return response
+```
+
+The AI Agent Email workflow leverages
+OpenAI's [new Responses API](https://community.openai.com/t/introducing-the-responses-api/1140929),
+a powerful capability released in March 2025 (a few days ago as this blogpost) that enables stateful conversations
+by persisting conversation history on OpenAI's servers. This integration showcases a perfect synergy
+between iWF's workflow durability and OpenAI's conversation persistence.
+
+At the core of this implementation is the `process_user_request` function, which serves as the bridge between the
+workflow and OpenAI's language model. Here's how it works:
+
+1. **Stateful Conversation Management**: The function reads the previously stored `previous_response_id` from iWF's
+   durable persistence layer (via `persistence.get_data_attribute(DA_PREVIOUS_RESPONSE_ID)`) and passes it to the OpenAI
+   API call.
+
+2. **Response ID Persistence**: After receiving a response from OpenAI, the function extracts the new response ID (
+   `response.id`) and stores it back in the workflow's persistence layer, ensuring conversation continuity across
+   interactions.
+
+3. **Structured Output Format**: The implementation uses OpenAI's structured response capabilities (
+   `text=Converter.get_response_format(AgentOutputSchema(AgentResponse))`) to ensure the AI generates responses in a
+   consistent JSON format that maps directly to the `AgentResponse` model.
+   (Note that this is from OpenAI's agents SDK, which also supports Response API already, but doesn't allow passing a
+   responseID yet)
+
+4. **Detailed Instructions**: The prompt provides comprehensive guidance to the model, covering email composition,
+   translation, time calculation for scheduling, and cancellation handling.
+
+This architecture provides several key benefits:
+
+1. **Distributed Conversation State**: By persisting the response ID in iWF's storage, any server instance running the
+   workflow can access the conversation history, even if the original instance fails or the workflow is moved to another
+   machine.
+
+2. **Resilient AI Interactions**: If the workflow is paused, migrated to another server, or resumed after a system
+   failure, it can seamlessly continue the conversation with OpenAI without losing context.
+
+3. **System Scalability**: This approach enables the system to scale to millions of concurrent workflows, each
+   maintaining its own conversation state with OpenAI.
+
+4. **Simplified Conversation Management**: The code doesn't need to track the full conversation history—it only needs to
+   store a single response ID, significantly reducing the storage requirements and simplifying the implementation.
+
+The combination of iWF's workflow state persistence and OpenAI's conversation state persistence creates a robust
+foundation for stateful AI agents that can maintain context across system boundaries and withstand infrastructure
+failures.
 
 ## Some Key Benefits of the Architecture
 
