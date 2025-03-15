@@ -22,7 +22,7 @@ software design and implementation. By leveraging iWF, developers can focus on b
 about the complexities of distributed systems, state management, or scalability.
 
 For more details on building reliable AI agents with iWF on Temporal, check out the following
-article: [Build Reliable AI Agents with iWF on Temporal](TODO link)
+article: [Build Reliable AI Agents with iWF on Temporal](https://medium.com/@qlong/build-reliable-ai-agents-with-iwf-on-temporal-7f1a101e000b)
 
 ### Functional Features
 
