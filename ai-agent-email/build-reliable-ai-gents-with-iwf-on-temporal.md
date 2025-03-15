@@ -186,7 +186,88 @@ class EmailAgentWorkflow(ObjectWorkflow):
         )
 ```
 
+The workflow definition above forms the backbone of our AI agent implementation. It defines a structured schema that iWF
+uses to create a reliable, durable, and scalable workflow. Let's understand the three key schema components:
+
+#### 1. Persistence Schema
+
+The `get_persistence_schema()` method defines all the data attributes that need to be persisted throughout the workflow
+execution:
+
+- **Structure**: Each attribute is defined with a name and type using `PersistenceField.data_attribute_def()`
+- **Durability**: These attributes are automatically persisted by iWF in Temporal's durable storage
+- **State Management**: Attributes include workflow status, email components, request history, and scheduling
+  information
+- **Type Safety**: Each attribute is strongly typed (string, integer) to ensure data consistency
+
+#### 2. Communication Schema
+
+The `get_communication_schema()` method defines
+the [channels](https://github.com/indeedeng/iwf/wiki/WorkflowState#signalchannel--internalchannel-async-message-queue)
+through which the workflow can receive inputs. The communication schema enables the interactive nature of our AI agent,
+allowing users to send requests, make
+revisions, or cancel operations while maintaining the workflow's durability.
+
+#### 3. State Schema
+
+The `get_workflow_states()` method defines the state machine that drives the workflow on the background(proactively
+executing).
+
+This state-based approach allows for clear separation of concerns, with each state handling specific aspects of the
+email agent's lifecycle. The state transitions are explicit, making the workflow logic easy to understand and maintain.
+
+Together, these schema components create a declarative definition of our workflow that iWF can interpret and execute
+with strong reliability guarantees. The schema-based approach significantly reduces the amount of boilerplate code
+needed for handling persistence, state management, and communication.
+
+For a more comprehensive understanding of iWF workflow definitions and basic concepts, refer to
+the [iWF Basic Concepts Overview documentation](https://github.com/indeedeng/iwf/wiki/Basic-concepts-overview). This
+resource explains the core ideas behind iWF's approach to workflow definition and execution in greater detail.
+
 ### Workflow RPCs
+
+```python
+@rpc()
+
+
+def send_request(self, input: str, persistence: Persistence, communication: Communication) -> bool:
+    status = persistence.get_data_attribute(DA_STATUS)
+    if status == STATUS_WAITING:
+        persistence.set_data_attribute(DA_CURRENT_REQUEST_DRAFT, "")
+        communication.publish_to_internal_channel(CH_USER_INPUT, input)
+        persistence.set_data_attribute(DA_STATUS, STATUS_PROCESSING)
+        return True
+    else:
+        return False
+
+
+@rpc()
+def describe(self, persistence: Persistence) -> WorkflowDetails:
+    status = persistence.get_data_attribute(DA_STATUS)
+    current_request = persistence.get_data_attribute(DA_CURRENT_REQUEST)
+    current_request_draft = persistence.get_data_attribute(DA_CURRENT_REQUEST_DRAFT)
+    response_id = persistence.get_data_attribute(DA_PREVIOUS_RESPONSE_ID)
+    email_recipient = persistence.get_data_attribute(DA_EMAIL_RECIPIENT)
+    email_subject = persistence.get_data_attribute(DA_EMAIL_SUBJECT)
+    email_body = persistence.get_data_attribute(DA_EMAIL_BODY)
+    send_time_seconds = persistence.get_data_attribute(DA_SCHEDULED_TIME_SECONDS)
+
+    return WorkflowDetails(
+        status=status,
+        current_request=current_request,
+        current_request_draft=current_request_draft,
+        response_id=response_id,
+        email_recipient=email_recipient,
+        email_subject=email_subject,
+        email_body=email_body,
+        send_time_seconds=send_time_seconds
+    )
+
+
+@rpc()
+def save_draft(self, draft: str, persistence: Persistence):
+    persistence.set_data_attribute(DA_CURRENT_REQUEST_DRAFT, draft)
+```
 
 ### Workflow States
 
