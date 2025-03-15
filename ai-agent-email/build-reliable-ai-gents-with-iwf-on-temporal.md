@@ -15,6 +15,10 @@ The demo showcases an AI-powered email agent capable of composing, translating, 
 drafting and cancellation features. It utilizes iWF on Temporal to ensure high scalability, reliability, and seamless
 integration with third-party APIs like OpenAI and Gmail for durable and stateful workflows.
 
+[![AI Agent Email Demo](https://img.youtube.com/vi/2dvIetECHWg/0.jpg)](https://www.youtube.com/watch?v=2dvIetECHWg "AI Agent Email Demo")
+
+[![iWF Framework Overview](https://img.youtube.com/vi/EEHSLYkbREU/0.jpg)](https://www.youtube.com/watch?v=EEHSLYkbREU "AI Agent Email Demo with Cancel")
+
 ### Functional requirements
 
 - **AI-Powered Email Composition**: Generate professionally written emails based on simple user requests and inputs
@@ -303,14 +307,100 @@ while maintaining workflow durability.
 
 ### Workflow States
 
+iWF WorkflowState is the unit of executing "asynchronous" on the "background".
+It allows AI Agent to proactively perform operations on behalf of users.
+
 #### InitState
 
+```python
+class InitState(WorkflowState[None]):
+    def execute(
+            ...
+    ) -> StateDecision:
+        persistence.set_data_attribute(DA_STATUS, STATUS_INITIALIZED)
+        print(f"workflow started, id: {ctx.workflow_id}")
+
+        google_email = os.environ.get('GOOGLE_EMAIL_ADDRESS')
+        google_email_app_password = os.environ.get('GOOGLE_EMAIL_APP_PASSWORD')
+
+        if not google_email or not google_email_app_password:
+            persistence.set_data_attribute(DA_STATUS, STATUS_FAILED)
+            raise StateDecision.force_fail_workflow("not provided google email credentials")
+        return StateDecision.single_next_state(AgentState)
+```
+
+The InitState serves as the workflow's entry point, initializing the workflow status
+and validating required credentials for email delivery. It checks for the presence of
+Google email credentials (email address and app password) and fails the workflow
+early if these required values are missing.
+
+Upon successful initialization, it transitions to the AgentState where the AI agent
+can begin processing user requests.
+
 #### AgentState
+
+```python
+class AgentState(WorkflowState[None]):
+    def wait_until(self, ctx: WorkflowContext, ignored: None, persistence: Persistence,
+                   communication: Communication) -> CommandRequest:
+        persistence.set_data_attribute(DA_STATUS, STATUS_WAITING)
+        return CommandRequest.for_any_command_completed(
+            InternalChannelCommand.by_name(CH_USER_INPUT)
+        )
+
+    def execute(self, ctx: WorkflowContext, ignored: None, command_results: CommandResults, persistence: Persistence,
+                communication: Communication) -> StateDecision:
+        user_req = command_results.internal_channel_commands[0].value
+        agent_response = process_user_request(user_req, persistence)
+        if agent_response.cancel_operation:
+            persistence.set_data_attribute(DA_STATUS, STATUS_CANCELED)
+            return StateDecision.graceful_complete_workflow("cancel emailing")
+
+        if agent_response.email_send_time_unix_seconds > 0:
+            persistence.set_data_attribute(DA_SCHEDULED_TIME_SECONDS, agent_response.email_send_time_unix_seconds)
+        if agent_response.email_body:
+            persistence.set_data_attribute(DA_EMAIL_BODY, agent_response.email_body)
+        if agent_response.email_subject:
+            persistence.set_data_attribute(DA_EMAIL_SUBJECT, agent_response.email_subject)
+        if agent_response.email_recipient:
+            persistence.set_data_attribute(DA_EMAIL_RECIPIENT, agent_response.email_recipient)
+
+        send_time = persistence.get_data_attribute(DA_SCHEDULED_TIME_SECONDS)
+        recipient = persistence.get_data_attribute(DA_EMAIL_RECIPIENT)
+        body = persistence.get_data_attribute(DA_EMAIL_BODY)
+        if send_time and send_time > 0 and recipient and body:
+            # now we can schedule to send email
+            return StateDecision.single_next_state(ScheduleState)
+        else:
+            # otherwise get another request from user
+            return StateDecision.single_next_state(AgentState)
+```
+
+The AgentState serves as the interactive core of the workflow, waiting for user input and processing
+requests using the OpenAI API to generate or modify email content. Upon receiving user input,
+it intelligently handles various actions including email drafting, translation, scheduling,
+or cancellation by persisting the appropriate data attributes to the workflow state.
+
+Based on the completeness of the email details (recipient, subject, body, and send time),
+it either transitions to the ScheduleState when ready to schedule an email or cycles back to
+itself to await further user interaction.
+
+```python
+    def get_state_options(self) -> WorkflowStateOptions:
+        return WorkflowStateOptions(
+            # customize the timeout to let OpenAI run longer
+            execute_api_timeout_seconds=90
+        )
+```
+
+The `get_state_options` method configures [special execution parameters](https://github.com/indeedeng/iwf/wiki/WorkflowOptions) for the AgentState, extending the default API timeout to 90 seconds to accommodate potential latency when calling OpenAI's API. This customization is crucial for AI-powered workflows, where external API calls may take longer than standard timeouts would allow, preventing premature failure of the workflow due to timeout constraints.
 
 #### ScheduleState
 
 #### SendingState
 
-## Comparison with some alternatives
+#### LLM Prompt and using OpenAI Response API
+
+## Some Key Benefits of the Architecture
 
 ## Summary
