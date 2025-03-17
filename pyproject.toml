@@ -13,6 +13,9 @@ Flask = "^2.3.3"
 iwf-python-sdk = "^0.7.0"
 httpx = "^0.23.3"
 attrs = "^21.3.0"
+openai = "^1.66.2"
+openai-agents = "^0.0.4"
+pydantic = "^2.10.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
