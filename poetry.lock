@@ -11,11 +11,6 @@ files = [
     {file = "annotated_types-0.7.0.tar.gz", hash = "sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "anyio"
 version = "4.9.0"
@@ -38,11 +33,6 @@ doc = ["Sphinx (>=8.2,<9.0)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)",
 test = ["anyio[trio]", "blockbuster (>=1.5.23)", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypothesis (>=4.0)", "psutil (>=5.9)", "pytest (>=7.0)", "trustme", "truststore (>=0.9.1)", "uvloop (>=0.21)"]
 trio = ["trio (>=0.26.1)"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "attrs"
 version = "22.2.0"
@@ -61,11 +51,6 @@ docs = ["furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-
 tests = ["attrs[tests-no-zope]", "zope.interface"]
 tests-no-zope = ["cloudpickle", "cloudpickle", "hypothesis", "hypothesis", "mypy (>=0.971,<0.990)", "mypy (>=0.971,<0.990)", "pympler", "pympler", "pytest (>=4.3.0)", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-mypy-plugins", "pytest-xdist[psutil]", "pytest-xdist[psutil]"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "blinker"
 version = "1.9.0"
@@ -77,11 +62,6 @@ files = [
     {file = "blinker-1.9.0.tar.gz", hash = "sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "certifi"
 version = "2025.1.31"
@@ -92,11 +72,6 @@ files = [
     {file = "certifi-2025.1.31-py3-none-any.whl", hash = "sha256:ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe"},
     {file = "certifi-2025.1.31.tar.gz", hash = "sha256:3d5da6925056f6f18f119200434a4780a94263f10d1c21d032a6f6b2baa20651"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "charset-normalizer"
@@ -199,11 +174,6 @@ files = [
     {file = "charset_normalizer-3.4.1.tar.gz", hash = "sha256:44251f18cd68a75b56585dd00dae26183e102cd5e0f9f1466e6df5da2ed64ea3"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "click"
 version = "8.1.8"
@@ -218,11 +188,6 @@ files = [
 [package.dependencies]
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "colorama"
 version = "0.4.6"
@@ -233,11 +198,6 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "coverage"
@@ -317,11 +277,6 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 [package.extras]
 toml = ["tomli"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "distro"
 version = "1.9.0"
@@ -332,11 +287,6 @@ files = [
     {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
     {file = "distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "exceptiongroup"
@@ -351,11 +301,6 @@ files = [
 
 [package.extras]
 test = ["pytest (>=6)"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "flask"
@@ -380,11 +325,6 @@ Werkzeug = ">=2.3.7"
 async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "griffe"
 version = "1.7.2"
@@ -399,11 +339,6 @@ files = [
 [package.dependencies]
 colorama = ">=0.4"
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "h11"
 version = "0.14.0"
@@ -414,11 +349,6 @@ files = [
     {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
     {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "httpcore"
@@ -440,11 +370,6 @@ asyncio = ["anyio (>=4.0,<5.0)"]
 http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
 trio = ["trio (>=0.22.0,<1.0)"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "httpx"
@@ -470,11 +395,6 @@ http2 = ["h2 (>=3,<5)"]
 socks = ["socksio (==1.*)"]
 zstd = ["zstandard (>=0.18.0)"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "idna"
 version = "3.10"
@@ -488,11 +408,6 @@ files = [
 
 [package.extras]
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "importlib-metadata"
@@ -517,11 +432,6 @@ perf = ["ipython"]
 test = ["flufl.flake8", "importlib_resources (>=1.3)", "jaraco.test (>=5.4)", "packaging", "pyfakefs", "pytest (>=6,!=8.1.*)", "pytest-perf (>=0.9.2)"]
 type = ["pytest-mypy"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "iniconfig"
 version = "2.1.0"
@@ -533,11 +443,6 @@ files = [
     {file = "iniconfig-2.1.0.tar.gz", hash = "sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "itsdangerous"
 version = "2.2.0"
@@ -548,11 +453,6 @@ files = [
     {file = "itsdangerous-2.2.0-py3-none-any.whl", hash = "sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef"},
     {file = "itsdangerous-2.2.0.tar.gz", hash = "sha256:e0050c0b7da1eea53ffaf149c0cfbb5c6e2e2b69c4bef22c81fa6eb73e5f6173"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "iwf-python-sdk"
@@ -568,11 +468,6 @@ files = [
 [package.dependencies]
 httpx = "0.28.1"
 python-dateutil = {version = ">=2.8.2,<3.0.0", markers = "python_version < \"3.11\""}
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "jinja2"
@@ -590,11 +485,6 @@ MarkupSafe = ">=2.0"
 
 [package.extras]
 i18n = ["Babel (>=2.7)"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "jiter"
@@ -681,11 +571,6 @@ files = [
     {file = "jiter-0.9.0.tar.gz", hash = "sha256:aadba0964deb424daa24492abc3d229c60c4a31bfee205aedbf1acc7639d7893"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "markupsafe"
 version = "3.0.2"
@@ -756,11 +641,6 @@ files = [
     {file = "markupsafe-3.0.2.tar.gz", hash = "sha256:ee55d3edf80167e48ea11a923c7386f4669df67d7994554387f84e7d8b0a2bf0"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "mypy"
 version = "1.15.0"
@@ -814,11 +694,6 @@ install-types = ["pip"]
 mypyc = ["setuptools (>=50)"]
 reports = ["lxml"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "mypy-extensions"
 version = "1.1.0"
@@ -829,11 +704,6 @@ files = [
     {file = "mypy_extensions-1.1.0-py3-none-any.whl", hash = "sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505"},
     {file = "mypy_extensions-1.1.0.tar.gz", hash = "sha256:52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "openai"
@@ -861,11 +731,6 @@ datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
 realtime = ["websockets (>=13,<16)"]
 voice-helpers = ["numpy (>=2.0.2)", "sounddevice (>=0.5.1)"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "openai-agents"
 version = "0.0.4"
@@ -885,11 +750,6 @@ requests = ">=2.0,<3"
 types-requests = ">=2.0,<3"
 typing-extensions = ">=4.12.2,<5"
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "packaging"
 version = "25.0"
@@ -900,11 +760,6 @@ files = [
     {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
     {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "pluggy"
@@ -920,11 +775,6 @@ files = [
 [package.extras]
 dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "pydantic"
@@ -946,11 +796,6 @@ typing-inspection = ">=0.4.0"
 [package.extras]
 email = ["email-validator (>=2.0.0)"]
 timezone = ["tzdata"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "pydantic-core"
@@ -1063,11 +908,6 @@ files = [
 [package.dependencies]
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "pytest"
 version = "7.4.4"
@@ -1090,11 +930,6 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 [package.extras]
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "pytest-cov"
 version = "4.1.0"
@@ -1112,11 +947,6 @@ pytest = ">=4.6"
 
 [package.extras]
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "pytest-env"
@@ -1136,11 +966,6 @@ tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
 [package.extras]
 test = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "pytest-mock (>=3.12)"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
@@ -1154,11 +979,6 @@ files = [
 
 [package.dependencies]
 six = ">=1.5"
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "requests"
@@ -1181,11 +1001,6 @@ urllib3 = ">=1.21.1,<3"
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "six"
 version = "1.17.0"
@@ -1197,11 +1012,6 @@ files = [
     {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "sniffio"
 version = "1.3.1"
@@ -1212,11 +1022,6 @@ files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "tomli"
@@ -1259,11 +1064,6 @@ files = [
     {file = "tomli-2.2.1.tar.gz", hash = "sha256:cd45e1dc79c835ce60f7404ec8119f2eb06d38b1deba146f07ced3bbc44505ff"},
 ]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "tqdm"
 version = "4.67.1"
@@ -1285,11 +1085,6 @@ notebook = ["ipywidgets (>=6)"]
 slack = ["slack-sdk"]
 telegram = ["requests"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "types-requests"
 version = "2.32.0.20250328"
@@ -1304,11 +1099,6 @@ files = [
 [package.dependencies]
 urllib3 = ">=2"
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "typing-extensions"
 version = "4.13.2"
@@ -1319,11 +1109,6 @@ files = [
     {file = "typing_extensions-4.13.2-py3-none-any.whl", hash = "sha256:a439e7c04b49fec3e5d3e2beaa21755cadbbdc391694e28ccdd36ca4a1408f8c"},
     {file = "typing_extensions-4.13.2.tar.gz", hash = "sha256:e6c81219bd689f51865d9e372991c540bda33a0379d5573cddb9a3a23f7caaef"},
 ]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "typing-inspection"
@@ -1338,11 +1123,6 @@ files = [
 
 [package.dependencies]
 typing-extensions = ">=4.12.0"
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "urllib3"
@@ -1361,11 +1141,6 @@ h2 = ["h2 (>=4,<5)"]
 socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
-
 [[package]]
 name = "werkzeug"
 version = "3.1.3"
@@ -1382,11 +1157,6 @@ MarkupSafe = ">=2.1.1"
 
 [package.extras]
 watchdog = ["watchdog (>=2.3)"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [[package]]
 name = "zipp"
@@ -1406,11 +1176,6 @@ doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linke
 enabler = ["pytest-enabler (>=2.2)"]
 test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-ignore-flaky"]
 type = ["pytest-mypy"]
-
-[package.source]
-type = "legacy"
-url = "https://nexus.corp.indeed.com/repository/pypi/simple"
-reference = "nexus"
 
 [metadata]
 lock-version = "2.0"
