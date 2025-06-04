@@ -1,0 +1,18 @@
+repos:
+- repo: local
+  hooks:
+
+  - id: mypy
+    name: Validate types with MyPy
+    entry: poetry run mypy
+    language: system
+    types: [python]
+    pass_filenames: false
+    args:
+    - "iwf"
+
+  - id: no-nexus
+    name: Remove nexus references
+    entry: .githooks/no-nexus.sh
+    language: script
+    types: [file] # Example: run on all files, adjust as needed
