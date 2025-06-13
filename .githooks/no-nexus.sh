@@ -1,16 +1,16 @@
 #! /usr/bin/env bash
 
-sed -i'' \
+gsed -i'' \
     -e '/./{H;$!d}' \
     -e 'x' \
     -e 's|\[package.source\]\ntype\s*=\s*\"legacy\"\nurl\s*=\s*\"https://nexus.corp.indeed.com/repository/pypi/simple\"\nreference\s*=\s*\"nexus\"||' \
     poetry.lock
 
-sed -i'' \
+gsed -i'' \
     -e '1{/^\s*$/d}' \
     poetry.lock
 
-sed -i'' \
+gsed -i'' \
     -e '/^\s*$/N;/^\s*\n$/D' \
     poetry.lock
 
@@ -21,4 +21,3 @@ if [[ $CHANGES -eq 0 ]]; then
 fi
 
 exit 1
-
